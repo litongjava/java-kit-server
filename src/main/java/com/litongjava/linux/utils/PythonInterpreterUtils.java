@@ -24,7 +24,14 @@ public class PythonInterpreterUtils {
     String fullCode = PythonCodeEngine.renderToString("main.py", Kv.by("script_path", scriptPath).set("temp_id", id));
 
     // 构造 ProcessBuilder
-    ProcessBuilder pb = new ProcessBuilder("python", "-c", fullCode);
+    String osName = System.getProperty("os.name");
+    ProcessBuilder pb=null;
+    if(osName.toLowerCase().contains("windows")) {
+      pb = new ProcessBuilder("python", "-c", fullCode);
+    }else {
+      pb = new ProcessBuilder("python3", "-c", fullCode);
+      
+    }
     Process process = pb.start();
 
     // 读取标准输出 (可能包含base64以及脚本本身的print信息)

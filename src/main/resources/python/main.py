@@ -11,4 +11,5 @@ exec(code, {'__name__': '__main__'})
 
 # 3. 执行完后再保存图片
 import matplotlib.pyplot as plt
-plt.savefig(r'images/#(temp_id).png')
+if plt.get_fignums():  # 如果存在图形
+    plt.savefig(r'images/#(temp_id).png')
