@@ -1,5 +1,7 @@
 package com.litongjava.linux.vo;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PythonResult {
+public class ProcessResult {
   private int exitCode;
   private String stdOut;
   private String stdErr;
-  private String image;
+  private List<String> images;
 }

@@ -1,6 +1,11 @@
 import warnings
 warnings.filterwarnings('ignore', message='.*FigureCanvasAgg is non-interactive.*')
 
+import matplotlib.pyplot as plt
+
+# 重写 plt.show() 为一个空函数（或仅做显示，不清除图像）
+plt.show = lambda: None
+
 import os
 # 1. 强制使用Agg后端
 os.environ['MPLBACKEND'] = 'Agg'
@@ -9,7 +14,7 @@ os.environ['MPLBACKEND'] = 'Agg'
 code = open(r'#(script_path)', 'r', encoding='utf-8').read()
 exec(code, {'__name__': '__main__'})
 
-# 3. 执行完后再保存图片
-import matplotlib.pyplot as plt
-if plt.get_fignums():  # 如果存在图形
-    plt.savefig(r'images/#(temp_id).png')
+# 此时所有图形依然保留在内存中，可以遍历保存
+for i, num in enumerate(plt.get_fignums(), start=1):
+    plt.figure(num)  # 激活对应的图像
+    plt.savefig(rf'#(script_dir)/images/{i}_plot.png')

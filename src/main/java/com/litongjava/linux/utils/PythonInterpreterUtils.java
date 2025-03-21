@@ -5,32 +5,34 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.jfinal.kit.Kv;
-import com.litongjava.linux.vo.PythonResult;
+import com.litongjava.linux.vo.ProcessResult;
 import com.litongjava.template.PythonCodeEngine;
 import com.litongjava.tio.utils.encoder.Base64Utils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 public class PythonInterpreterUtils {
-  public static PythonResult execute(String scriptPath, long id) throws IOException, InterruptedException {
-    File folder = new File("images");
-    if (!folder.exists()) {
-      folder.mkdirs();
+  public static ProcessResult execute(String scriptPath, String script_dir) throws IOException, InterruptedException {
+    String imagesDir = script_dir + File.separator + "images";
+    File imagesFolder = new File(imagesDir);
+    if (!imagesFolder.exists()) {
+      imagesFolder.mkdirs();
     }
 
-    String fullCode = PythonCodeEngine.renderToString("main.py", Kv.by("script_path", scriptPath).set("temp_id", id));
+    String fullCode = PythonCodeEngine.renderToString("main.py", Kv.by("script_path", scriptPath).set("script_dir", script_dir));
 
     // 构造 ProcessBuilder
     String osName = System.getProperty("os.name");
-    ProcessBuilder pb=null;
-    if(osName.toLowerCase().contains("windows")) {
+    ProcessBuilder pb = null;
+    if (osName.toLowerCase().contains("windows")) {
       pb = new ProcessBuilder("python", "-c", fullCode);
-    }else {
+    } else {
       pb = new ProcessBuilder("python3", "-c", fullCode);
-      
+
     }
     Process process = pb.start();
 
@@ -58,39 +60,45 @@ public class PythonInterpreterUtils {
     int exitCode = process.waitFor();
 
     // 构造返回实体
-    PythonResult result = new PythonResult();
+    ProcessResult result = new ProcessResult();
     result.setExitCode(exitCode);
     result.setStdOut(outputBuilder.toString());
     result.setStdErr(errorBuilder.toString());
-    File file = new File("images" + File.separator + id + ".png");
-    if (file.exists()) {
-      byte[] readAllBytes = Files.readAllBytes(file.toPath());
-      String base64 = Base64Utils.encodeImage(readAllBytes, "image/png");
-      result.setImage(base64);
+    File[] listFiles = imagesFolder.listFiles();
+    if (listFiles != null && listFiles.length > 0) {
+      List<String> images = new ArrayList<>();
+      for (File image : listFiles) {
+        byte[] readAllBytes = FileUtil.readBytes(image);
+        String base64 = Base64Utils.encodeImage(readAllBytes, "image/png");
+        images.add(base64);
+        result.setImages(images);
+      }
     }
     return result;
   }
 
   /**
    */
-  public static PythonResult executeCode(String code) throws IOException, InterruptedException {
+  public static ProcessResult executeCode(String code) throws IOException, InterruptedException {
 
-    File folder = new File("scripts");
-    if (!folder.exists()) {
-      folder.mkdirs();
-    }
     long id = SnowflakeIdUtils.id();
-    String scriptPath = "scripts" + File.separator + id + ".py";
+    String folder = "scripts" + File.separator + id;
+    File fileFolder = new File(folder);
+    if (!fileFolder.exists()) {
+      fileFolder.mkdirs();
+    }
+    String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-    return execute(scriptPath, id);
+    return execute(scriptPath, folder);
   }
 
-  public static PythonResult executeScript(String scriptPath) throws IOException, InterruptedException {
-    File folder = new File("scripts");
-    if (!folder.exists()) {
-      folder.mkdirs();
-    }
+  public static ProcessResult executeScript(String scriptPath) throws IOException, InterruptedException {
     long id = SnowflakeIdUtils.id();
-    return execute(scriptPath, id);
+    String folder = "scripts" + File.separator + id;
+    File fileFolder = new File(folder);
+    if (!fileFolder.exists()) {
+      fileFolder.mkdirs();
+    }
+    return execute(scriptPath, folder);
   }
 }
