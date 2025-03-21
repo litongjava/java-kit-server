@@ -18,6 +18,7 @@
     <tio-boot.version>1.9.4</tio-boot.version>
     <jfinal-aop.version>1.3.5</jfinal-aop.version>
     <java-db.version>1.5.1</java-db.version>
+    <java.java-openai>1.1.6</java.java-openai>
 
     <!-- 应用程序属性 -->
     <final.name>web-hello</final.name>
@@ -36,6 +37,12 @@
       <groupId>com.litongjava</groupId>
       <artifactId>java-db</artifactId>
       <version>${java-db.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.litongjava</groupId>
+      <artifactId>java-openai</artifactId>
+      <version>${java.java-openai}</version>
     </dependency>
 
 
