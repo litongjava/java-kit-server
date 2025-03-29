@@ -1,6 +1,8 @@
 package com.litongjava.linux.config;
 
 import com.litongjava.context.BootConfiguration;
+import com.litongjava.linux.handler.CacheHandler;
+import com.litongjava.linux.handler.ManimHanlder;
 import com.litongjava.linux.handler.PingHandler;
 import com.litongjava.linux.handler.PythonHanlder;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
@@ -23,6 +25,12 @@ public class AppConfig implements BootConfiguration {
 
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
+
+      ManimHanlder manimHanlder = new ManimHanlder();
+      r.add("/manim", manimHanlder::index);
+
+      CacheHandler cacheHandler = new CacheHandler();
+      r.add("/cache/**", cacheHandler::index);
     }
 
     String authToken = EnvUtils.get("app.auth.token");
@@ -35,7 +43,7 @@ public class AppConfig implements BootConfiguration {
     model.addBlockUrl("/**"); // 拦截所有路由
 
     // 设置例外路由 index
-    model.addAllowUrls("/", "/ping");
+    model.addAllowUrls("/", "/ping", "/cache/**");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);

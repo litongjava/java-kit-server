@@ -13,12 +13,18 @@ import com.litongjava.linux.ProcessResult;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ManimService {
 
   public ProcessResult executeCode(String code) throws IOException, InterruptedException {
+    new File("cache").mkdirs();
     long id = SnowflakeIdUtils.id();
-    Template template = Engine.use().getTemplateByString(code);
-    code = template.renderToString(Kv.by("output_path", id + ""));
+    String subFolder = "cache" + File.separator + id;
+    code = code.replace("#(output_path)", subFolder);
+    //Template template = Engine.use().getTemplateByString(code);
+    //code = template.renderToString(Kv.by("output_path", subFolder));
 
     String folder = "scripts" + File.separator + id;
     File fileFolder = new File(folder);
@@ -29,9 +35,12 @@ public class ManimService {
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
     ProcessResult execute = execute(scriptPath);
     execute.setTaskId(id);
-    File file = new File(id + File.separator + "videos" + File.separator + "1080p60" + File.separator + "CombinedScene.mp4");
+    String filePath = subFolder + File.separator + "videos" + File.separator + "1080p30" + File.separator + "CombinedScene.mp4";
+    File file = new File(filePath);
     if (file.exists()) {
-      execute.setOutput(file.getAbsolutePath());
+      execute.setOutput(filePath.replace("\\", "/"));
+    } else {
+      log.info("file is not exists:{}", filePath);
     }
     return execute;
   }
@@ -44,8 +53,9 @@ public class ManimService {
       pb = new ProcessBuilder("python", scriptPath);
     } else {
       pb = new ProcessBuilder("python3", scriptPath);
-
     }
+    pb.environment().put("PYTHONIOENCODING", "utf-8");
+
     Process process = pb.start();
 
     // 读取标准输出 (可能包含base64以及脚本本身的print信息)
