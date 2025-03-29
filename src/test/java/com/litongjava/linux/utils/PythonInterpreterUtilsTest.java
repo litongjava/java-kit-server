@@ -2,7 +2,7 @@ package com.litongjava.linux.utils;
 
 import org.junit.Test;
 
-import com.litongjava.linux.vo.ProcessResult;
+import com.litongjava.linux.ProcessResult;
 import com.litongjava.tio.utils.json.JsonUtils;
 
 public class PythonInterpreterUtilsTest {

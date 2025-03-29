@@ -89,7 +89,9 @@ public class PythonInterpreterUtils {
     }
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-    return execute(scriptPath, folder);
+    ProcessResult execute = execute(scriptPath, folder);
+    execute.setTaskId(id);
+    return execute;
   }
 
   public static ProcessResult executeScript(String scriptPath) throws IOException, InterruptedException {
