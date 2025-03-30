@@ -5,26 +5,35 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.concurrent.TimeUnit;
 
-import com.jfinal.kit.Kv;
-import com.jfinal.template.Engine;
-import com.jfinal.template.Template;
 import com.litongjava.linux.ProcessResult;
+import com.litongjava.tio.core.ChannelContext;
+import com.litongjava.tio.core.Tio;
+import com.litongjava.tio.http.common.sse.SsePacket;
+import com.litongjava.tio.http.server.util.SseEmitter;
 import com.litongjava.tio.utils.hutool.FileUtil;
+import com.litongjava.tio.utils.json.JsonUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
+import com.litongjava.tio.utils.thread.TioThreadUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimService {
 
-  public ProcessResult executeCode(String code) throws IOException, InterruptedException {
+  public ProcessResult executeCode(String code, Boolean stream, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
     long id = SnowflakeIdUtils.id();
     String subFolder = "cache" + File.separator + id;
     code = code.replace("#(output_path)", subFolder);
-    //Template template = Engine.use().getTemplateByString(code);
-    //code = template.renderToString(Kv.by("output_path", subFolder));
 
     String folder = "scripts" + File.separator + id;
     File fileFolder = new File(folder);
@@ -33,20 +42,54 @@ public class ManimService {
     }
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-    ProcessResult execute = execute(scriptPath);
-    execute.setTaskId(id);
-    String filePath = subFolder + File.separator + "videos" + File.separator + "1080p30" + File.separator + "CombinedScene.mp4";
-    File file = new File(filePath);
-    if (file.exists()) {
-      execute.setOutput(filePath.replace("\\", "/"));
+    // 执行脚本
+
+    String videoFolder = subFolder + File.separator + "videos" + File.separator + "1080p30";
+    // 定义需要监控的文件夹，注意此处为绝对路径或根据实际情况调整
+    String partVideoFolder = videoFolder + File.separator + "partial_movie_files" + File.separator + "CombinedScene";
+    // 如果需要流式发送，则启动文件夹监控线程
+
+    ProcessResult execute = null;
+    if (stream) {
+      File file = new File(partVideoFolder);
+      file.mkdirs();
+      log.info("watch:{}", file.getAbsolutePath());
+      Thread watcherThread = new Thread(() -> watchFolder(partVideoFolder, channelContext));
+      watcherThread.start();
+      TioThreadUtils.execute(() -> {
+        try {
+          ProcessResult execute2 = execute(scriptPath);
+          // 可以等待一段时间，以确保监控期间捕获到文件创建事件
+          Thread.sleep(2000);
+          if (watcherThread != null && watcherThread.isAlive()) {
+            watcherThread.interrupt();
+          }
+          String skipNullJson = JsonUtils.toSkipNullJson(execute2);
+          Tio.send(channelContext, new SsePacket("result", skipNullJson));
+          SseEmitter.closeSeeConnection(channelContext);
+
+        } catch (IOException e) {
+          e.printStackTrace();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      });
+
     } else {
-      log.info("file is not exists:{}", filePath);
+      execute = execute(scriptPath);
+      execute.setTaskId(id);
+      String filePath = videoFolder + File.separator + "CombinedScene.mp4";
+      File file = new File(filePath);
+      if (file.exists()) {
+        execute.setOutput(filePath.replace("\\", "/"));
+      } else {
+        log.info("file is not exists:{}", filePath);
+      }
     }
     return execute;
   }
 
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
-    // 构造 ProcessBuilder
     String osName = System.getProperty("os.name");
     ProcessBuilder pb = null;
     if (osName.toLowerCase().contains("windows")) {
@@ -58,30 +101,20 @@ public class ManimService {
 
     Process process = pb.start();
 
-    // 读取标准输出 (可能包含base64以及脚本本身的print信息)
     BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-
-    // 读取错误输出
     BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
 
-    // 用于存放所有的标准输出行
     StringBuilder outputBuilder = new StringBuilder();
-
     String line;
     while ((line = stdInput.readLine()) != null) {
       outputBuilder.append(line).append("\n");
     }
-
-    // 收集错误输出
     StringBuilder errorBuilder = new StringBuilder();
     while ((line = stdError.readLine()) != null) {
       errorBuilder.append(line).append("\n");
     }
-
-    // 等待进程结束
     int exitCode = process.waitFor();
 
-    // 构造返回实体
     ProcessResult result = new ProcessResult();
     result.setExitCode(exitCode);
     result.setStdOut(outputBuilder.toString());
@@ -89,4 +122,36 @@ public class ManimService {
     return result;
   }
 
+  /**
+   * 监控指定目录中新建文件的变化，并发送给客户端
+   */
+  private void watchFolder(String folderPath, ChannelContext channelContext) {
+    Path path = Paths.get(folderPath);
+    try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
+      path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+      while (!Thread.currentThread().isInterrupted()) {
+        WatchKey key = null;
+        try {
+          key = watchService.poll(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+          return;
+        }
+        if (key == null) {
+          continue;
+        }
+        for (WatchEvent<?> event : key.pollEvents()) {
+          if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+            String newFileName = event.context().toString();
+            String fullPath = folderPath + File.separator + newFileName;
+            // 通过 Tio.send 发送新文件路径到客户端
+            Tio.send(channelContext, new SsePacket("part", fullPath));
+          }
+        }
+        key.reset();
+      }
+    } catch (IOException e) {
+      log.error("Error watching folder {}", folderPath, e);
+    }
+  }
 }
