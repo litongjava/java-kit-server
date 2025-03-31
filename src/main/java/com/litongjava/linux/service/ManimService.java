@@ -59,6 +59,14 @@ public class ManimService {
       TioThreadUtils.execute(() -> {
         try {
           ProcessResult execute2 = execute(scriptPath);
+          execute2.setTaskId(id);
+          String filePath = videoFolder + File.separator + "CombinedScene.mp4";
+          File combinedScenefile = new File(filePath);
+          if (combinedScenefile.exists()) {
+            execute2.setOutput(filePath.replace("\\", "/"));
+          } else {
+            log.info("file is not exists:{}", filePath);
+          }
           // 可以等待一段时间，以确保监控期间捕获到文件创建事件
           Thread.sleep(2000);
           if (watcherThread != null && watcherThread.isAlive()) {
