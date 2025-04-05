@@ -26,6 +26,12 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.litongjava</groupId>
+      <artifactId>java-native-media</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
     <!-- 日志框架 -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -45,8 +51,6 @@
       <version>${java.java-openai}</version>
     </dependency>
 
-
-    <!-- Tio Boot 框架 -->
     <dependency>
       <groupId>com.litongjava</groupId>
       <artifactId>tio-boot</artifactId>
