@@ -2,6 +2,7 @@ package com.litongjava.linux.config;
 
 import com.litongjava.context.BootConfiguration;
 import com.litongjava.linux.handler.CacheHandler;
+import com.litongjava.linux.handler.CmdHanlder;
 import com.litongjava.linux.handler.DataHandler;
 import com.litongjava.linux.handler.HlsHandler;
 import com.litongjava.linux.handler.ManimHanlder;
@@ -24,6 +25,9 @@ public class AppConfig implements BootConfiguration {
     if (r != null) {
       PingHandler pingHanlder = new PingHandler();
       r.add("/ping", pingHanlder::ping);
+
+      CmdHanlder cmdHanlder = new CmdHanlder();
+      r.add("/cmd", cmdHanlder::index);
 
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
