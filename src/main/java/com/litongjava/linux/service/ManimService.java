@@ -1,9 +1,7 @@
 package com.litongjava.linux.service;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -117,10 +115,9 @@ public class ManimService {
   }
 
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
-    log.info("scriptPath:{}", scriptPath);
     String osName = System.getProperty("os.name").toLowerCase();
-    log.info("osName:{}", osName);
-    ProcessBuilder pb = null;
+    log.info("osName: {} scriptPath: {}", osName, scriptPath);
+    ProcessBuilder pb;
     if (osName.contains("windows") || osName.startsWith("mac")) {
       pb = new ProcessBuilder("python", scriptPath);
     } else {
@@ -128,26 +125,33 @@ public class ManimService {
     }
     pb.environment().put("PYTHONIOENCODING", "utf-8");
 
+    // 获取脚本所在目录
+    File scriptFile = new File(scriptPath);
+    File scriptDir = scriptFile.getParentFile();
+    if (scriptDir != null && !scriptDir.exists()) {
+      scriptDir.mkdirs();
+    }
+
+    // 定义日志文件路径，存放在与 scriptPath 相同的目录
+    File stdoutFile = new File(scriptDir, "stdout.log");
+    File stderrFile = new File(scriptDir, "stderr.log");
+
+    // 将输出和错误流重定向到对应的日志文件
+    pb.redirectOutput(stdoutFile);
+    pb.redirectError(stderrFile);
+
     Process process = pb.start();
-
-    BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-    BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
-
-    StringBuilder outputBuilder = new StringBuilder();
-    String line;
-    while ((line = stdInput.readLine()) != null) {
-      outputBuilder.append(line).append("\n");
-    }
-    StringBuilder errorBuilder = new StringBuilder();
-    while ((line = stdError.readLine()) != null) {
-      errorBuilder.append(line).append("\n");
-    }
     int exitCode = process.waitFor();
+
+    // 读取日志文件内容，返回给客户端（如果需要实时返回，可用其他方案监控文件变化）
+    String stdoutContent = new String(Files.readAllBytes(stdoutFile.toPath()), StandardCharsets.UTF_8);
+    String stderrContent = new String(Files.readAllBytes(stderrFile.toPath()), StandardCharsets.UTF_8);
 
     ProcessResult result = new ProcessResult();
     result.setExitCode(exitCode);
-    result.setStdOut(outputBuilder.toString());
-    result.setStdErr(errorBuilder.toString());
+    result.setStdOut(stdoutContent);
+    result.setStdErr(stderrContent);
+
     return result;
   }
 
