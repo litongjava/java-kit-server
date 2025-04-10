@@ -13,6 +13,7 @@ import com.litongjava.model.body.RespBodyVo;
 import com.litongjava.tio.http.common.UploadFile;
 import com.litongjava.tio.utils.SystemTimer;
 import com.litongjava.tio.utils.hutool.FileUtil;
+import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,20 +87,21 @@ public class HlsService {
    * @param fileData     文件数据（实际代码中应处理 multipart 文件）
    * @return 返回 session_id 与场景序号
    */
-  public RespBodyVo uploadScene(Long sessionId, Integer scene_index, UploadFile uploadFile) {
-    if (sessionId == null || !sessionMap.containsKey(sessionId)) {
-      return RespBodyVo.fail("Invalid sessionId");
-    }
-    String relPath = "./data/hls/" + sessionId + "/scene_" + scene_index + ".mp4";
+  public RespBodyVo convert(Long sessionId, UploadFile uploadFile) {
+    String name = uploadFile.getName();
+    String baseName = FilenameUtils.getBaseName(name);
+    String subPath = "./data/hls/" + sessionId + "/";
+
+    String relPath = subPath + name;
     File file = new File(relPath);
     file.getParentFile().mkdirs();
     FileUtil.writeBytes(uploadFile.getData(), file);
 
-    HlsSession hlsSession = sessionMap.get(sessionId);
-    String playlistUrl = hlsSession.getPlayFilePath();
-    String appendMp4ToHLS = NativeMedia.appendMp4ToHLS(playlistUrl, relPath, scene_index, 10);
+    String hlsPath = subPath + baseName + ".m3u8";
+
+    String appendMp4ToHLS = NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + baseName + "_%03d.ts", 1);
     log.info(appendMp4ToHLS);
-    Kv kv = Kv.by("session_id", sessionId).set("sceneI_index", scene_index);
+    Kv kv = Kv.by("session_id", sessionId);
     return RespBodyVo.ok(kv);
   }
 

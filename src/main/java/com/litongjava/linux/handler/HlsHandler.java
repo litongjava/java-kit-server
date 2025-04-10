@@ -39,9 +39,8 @@ public class HlsHandler {
     HttpResponse response = TioRequestContext.getResponse();
     UploadFile uploadFile = httpRequest.getUploadFile("file");
     Long sessionId = httpRequest.getLong("sessionId");
-    Integer scene_index = httpRequest.getInt("scene_index");
     // 模拟文件数据
-    RespBodyVo bodyVo = hlsService.uploadScene(sessionId, scene_index, uploadFile);
+    RespBodyVo bodyVo = hlsService.convert(sessionId, uploadFile);
     return response.setJson(bodyVo);
   }
 
