@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -15,6 +17,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.TimeUnit;
 
 import com.litongjava.linux.ProcessResult;
+import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.core.Tio;
 import com.litongjava.tio.http.common.sse.SsePacket;
@@ -90,9 +93,25 @@ public class ManimService {
       File file = new File(filePath);
       if (file.exists()) {
         execute.setOutput(filePath.replace("\\", "/"));
+
+        String subPath = "./data/hls/" + id + "/";
+        String name = "main";
+
+        String relPath = subPath + name + ".mp4";
+        File relPathFile = new File(relPath);
+        relPathFile.getParentFile().mkdirs();
+
+        Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        String hlsPath = subPath + name + ".m3u8";
+
+        NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
+
+        execute.setOutput(hlsPath);
+
       } else {
         log.info("file is not exists:{}", filePath);
       }
+
     }
     return execute;
   }
