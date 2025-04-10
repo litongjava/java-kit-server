@@ -22,7 +22,6 @@ public class ManimHanlder {
       stream = false;
     }
     String code = request.getBodyString();
-    log.info("code:{}", code);
     HttpResponse response = TioRequestContext.getResponse();
 
     if (stream) {

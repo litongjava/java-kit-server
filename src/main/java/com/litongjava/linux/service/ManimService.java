@@ -46,8 +46,8 @@ public class ManimService {
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
     // 执行脚本
-
     String videoFolder = subFolder + File.separator + "videos" + File.separator + "1080p30";
+    log.info("videoFolder:{}", videoFolder);
     // 定义需要监控的文件夹，注意此处为绝对路径或根据实际情况调整
     String partVideoFolder = videoFolder + File.separator + "partial_movie_files" + File.separator + "CombinedScene";
     // 如果需要流式发送，则启动文件夹监控线程
@@ -117,9 +117,11 @@ public class ManimService {
   }
 
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
-    String osName = System.getProperty("os.name");
+    log.info("scriptPath:{}", scriptPath);
+    String osName = System.getProperty("os.name").toLowerCase();
+    log.info("osName:{}", osName);
     ProcessBuilder pb = null;
-    if (osName.toLowerCase().contains("windows")) {
+    if (osName.contains("windows") || osName.startsWith("mac")) {
       pb = new ProcessBuilder("python", scriptPath);
     } else {
       pb = new ProcessBuilder("python3", scriptPath);
