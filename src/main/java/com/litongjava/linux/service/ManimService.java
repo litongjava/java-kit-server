@@ -106,7 +106,7 @@ public class ManimService {
 
         NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
 
-        execute.setOutput(hlsPath);
+        execute.setOutput(hlsPath.replace("./", "/"));
 
       } else {
         log.info("file is not exists:{}", filePath);
