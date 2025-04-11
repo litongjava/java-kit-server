@@ -8,6 +8,7 @@ import com.litongjava.linux.handler.HlsHandler;
 import com.litongjava.linux.handler.ManimHanlder;
 import com.litongjava.linux.handler.PingHandler;
 import com.litongjava.linux.handler.PythonHanlder;
+import com.litongjava.linux.handler.ScriptsHandler;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
 import com.litongjava.tio.boot.satoken.FixedTokenInterceptor;
@@ -40,7 +41,10 @@ public class AppConfig implements BootConfiguration {
 
       DataHandler dataHandler = new DataHandler();
       r.add("/data/**", dataHandler::index);
-
+      
+      ScriptsHandler scriptsHandler = new ScriptsHandler();
+      r.add("/scripts/**", scriptsHandler::index);
+      
       HlsHandler hlsHandler = new HlsHandler();
       r.add("/hls/start", hlsHandler::start);
     }
