@@ -41,10 +41,10 @@ public class AppConfig implements BootConfiguration {
 
       DataHandler dataHandler = new DataHandler();
       r.add("/data/**", dataHandler::index);
-      
+
       ScriptsHandler scriptsHandler = new ScriptsHandler();
       r.add("/scripts/**", scriptsHandler::index);
-      
+
       HlsHandler hlsHandler = new HlsHandler();
       r.add("/hls/start", hlsHandler::start);
     }
@@ -59,7 +59,7 @@ public class AppConfig implements BootConfiguration {
     model.addBlockUrl("/**"); // 拦截所有路由
 
     // 设置例外路由 index
-    model.addAllowUrls("/", "/ping", "/cache/**", "/hls/**", "/data/**");
+    model.addAllowUrls("/", "/ping", "/cache/**", "/hls/**", "/data/**", "/scripts/**");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
