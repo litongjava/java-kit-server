@@ -70,7 +70,7 @@ public class HlsServiceTest {
     for (int i = 0; i < listFiles.length; i++) {
       log.info("filename:{}", listFiles[i].getName());
       if (listFiles[i].getName().endsWith(".mp4")) {
-        System.out.println(NativeMedia.appendMp4Segment(sessionPtr, listFiles[i].getAbsolutePath()));
+        System.out.println(NativeMedia.appendVideoSegmentToHls(sessionPtr, listFiles[i].getAbsolutePath()));
       }
     }
 
@@ -98,7 +98,7 @@ public class HlsServiceTest {
     for (int i = 0; i < listFiles.length; i++) {
       log.info("filename:{}", listFiles[i].getName());
       if (listFiles[i].getName().endsWith(".mp3")) {
-        System.out.println(NativeMedia.appendMp4Segment(sessionPtr, listFiles[i].getAbsolutePath()));
+        System.out.println(NativeMedia.appendVideoSegmentToHls(sessionPtr, listFiles[i].getAbsolutePath()));
         // 在适当的转场位置插入静音段（例如静音 1 秒）
         System.out.println(NativeMedia.insertSilentSegment(sessionPtr, 1.0));
       }
