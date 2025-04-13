@@ -1,6 +1,8 @@
 package com.litongjava.linux.handler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.linux.ProcessResult;
@@ -29,9 +31,15 @@ public class ManimHanlder {
     String subPath = "./data/session/" + sessionId;
     new File(subPath).mkdirs();
     String m3u8Path = subPath + "/main.m3u8";
+    try {
+      new File(m3u8Path).createNewFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     String tsPattern = subPath + "/segment_video_%03d.ts";
     int startNumber = 0;
-    int segmentDuration = 10; // 每个分段时长（秒）
+    int segmentDuration = 5; //每个分段时长（秒）
     long initPersistentHls = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
 
     ProcessResult processResult = new ProcessResult();

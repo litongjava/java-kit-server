@@ -31,9 +31,6 @@ public class VideoMergeTest {
       }
     }
 
-    // 输出 JSON 格式的结果，这里不会出现 null 元素
-    System.out.println(JsonUtils.toJson(videoPaths));
-
     // 如果 NativeMedia.merge 方法需要数组，可以通过 toArray 方法转换
     NativeMedia.merge(videoPaths.toArray(new String[0]), "main.mp4");
   }
