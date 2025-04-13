@@ -30,15 +30,19 @@ public class ManimImageService {
     ProcessResult execute = execute(scriptPath);
     execute.setTaskId(id);
     File imageFolderFile = new File(imageFolder);
-    File[] listFiles = imageFolderFile.listFiles();
-    log.info("listFiles length:{}", listFiles.length);
-    for (File file : listFiles) {
-      if (file.getName().endsWith(".png")) {
-        String name = file.getName();
-        String filePath = imageFolder + File.separator + name;
-        String newFilePath = filePath.replace("\\", "/");
-        execute.setOutput("/" + newFilePath);
+    if (imageFolderFile.exists()) {
+      File[] listFiles = imageFolderFile.listFiles();
+      log.info("listFiles length:{}", listFiles.length);
+      for (File file : listFiles) {
+        if (file.getName().endsWith(".png")) {
+          String name = file.getName();
+          String filePath = imageFolder + File.separator + name;
+          String newFilePath = filePath.replace("\\", "/");
+          execute.setOutput("/" + newFilePath);
+        }
       }
+    } else {
+      log.error("not exits:{}", imageFolder);
     }
     return execute;
   }
