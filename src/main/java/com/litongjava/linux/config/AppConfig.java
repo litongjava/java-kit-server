@@ -1,11 +1,11 @@
 package com.litongjava.linux.config;
 
 import com.litongjava.context.BootConfiguration;
-import com.litongjava.linux.handler.CacheHandler;
 import com.litongjava.linux.handler.CmdHanlder;
 import com.litongjava.linux.handler.DataHandler;
 import com.litongjava.linux.handler.HlsHandler;
 import com.litongjava.linux.handler.ManimHanlder;
+import com.litongjava.linux.handler.ManimImageHandler;
 import com.litongjava.linux.handler.PingHandler;
 import com.litongjava.linux.handler.PythonHanlder;
 import com.litongjava.linux.handler.ScriptsHandler;
@@ -38,11 +38,13 @@ public class AppConfig implements BootConfiguration {
       r.add("/manim/finish", manimHanlder::finish);
       r.add("/manim", manimHanlder::index);
 
-      CacheHandler cacheHandler = new CacheHandler();
-      r.add("/cache/**", cacheHandler::index);
+      ManimImageHandler manimImageHandler = new ManimImageHandler();
+      r.add("/manim/image", manimImageHandler::index);
 
       DataHandler dataHandler = new DataHandler();
       r.add("/data/**", dataHandler::index);
+      r.add("/cache/**", dataHandler::index);
+      r.add("/media/**", dataHandler::index);
 
       ScriptsHandler scriptsHandler = new ScriptsHandler();
       r.add("/scripts/**", scriptsHandler::index);
@@ -61,7 +63,7 @@ public class AppConfig implements BootConfiguration {
     model.addBlockUrl("/**"); // 拦截所有路由
 
     // 设置例外路由 index
-    model.addAllowUrls("/", "/ping", "/cache/**", "/hls/**", "/data/**", "/scripts/**");
+    model.addAllowUrls("/", "/ping", "/media/**", "/cache/**", "/hls/**", "/data/**", "/scripts/**");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
