@@ -21,6 +21,8 @@ public class HlsSenceTest {
     int segmentDuration = 10; // 每个分段时长（秒）
 
     // 初始化持久化 HLS 会话，返回 session 指针
+    String listHlsSession = NativeMedia.listHlsSession();
+    log.info("session:{}", listHlsSession);
     long sessionPtr = NativeMedia.initPersistentHls(playlistUrl, tsPattern, startNumber, segmentDuration);
     System.out.println("Session pointer: " + sessionPtr);
     String folderPath = "C:\\Users\\Administrator\\Downloads";
@@ -30,10 +32,16 @@ public class HlsSenceTest {
       log.info("filename:{}", listFiles[i].getName());
       if (listFiles[i].getName().endsWith(".mp4")) {
         System.out.println(NativeMedia.appendVideoSegmentToHls(sessionPtr, listFiles[i].getAbsolutePath()));
+        listHlsSession = NativeMedia.listHlsSession();
+        log.info("session:{}", listHlsSession);
       }
     }
 
     // 结束会话
+    listHlsSession = NativeMedia.listHlsSession();
+    log.info("session:{}", listHlsSession);
     System.out.println(NativeMedia.finishPersistentHls(sessionPtr, playlistUrl));
+    listHlsSession = NativeMedia.listHlsSession();
+    log.info("session:{}", listHlsSession);
   }
 }

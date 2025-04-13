@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManimService {
 
-  public ProcessResult executeCode(String code, Boolean stream, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(String code, Boolean stream, Long sessionId, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
     long id = SnowflakeIdUtils.id();
     String subFolder = "cache" + File.separator + id;
@@ -105,6 +105,9 @@ public class ManimService {
         NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
 
         execute.setOutput(hlsPath.replace("./", "/"));
+        if (m3u8Path != null) {
+          NativeMedia.appendVideoSegmentToHls(sessionId, m3u8Path);
+        }
 
       } else {
         log.info("file is not exists:{}", filePath);
