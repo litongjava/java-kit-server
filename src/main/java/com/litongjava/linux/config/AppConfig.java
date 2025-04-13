@@ -34,6 +34,8 @@ public class AppConfig implements BootConfiguration {
       r.add("/python", pythonHanlder::index);
 
       ManimHanlder manimHanlder = new ManimHanlder();
+      r.add("/manim/start", manimHanlder::start);
+      r.add("/manim/finish", manimHanlder::finish);
       r.add("/manim", manimHanlder::index);
 
       CacheHandler cacheHandler = new CacheHandler();

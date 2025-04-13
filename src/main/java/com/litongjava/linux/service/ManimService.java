@@ -101,12 +101,16 @@ public class ManimService {
 
         Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         String hlsPath = subPath + name + ".m3u8";
-
+        log.info("to hls:{}", hlsPath);
         NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
 
         execute.setOutput(hlsPath.replace("./", "/"));
-        if (m3u8Path != null) {
-          NativeMedia.appendVideoSegmentToHls(sessionId, m3u8Path);
+        if (sessionId != null) {
+          log.info("merge into:{},{}", sessionId, m3u8Path);
+          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionId, filePath);
+          log.info("merge result:{}", appendVideoSegmentToHls);
+        } else {
+          log.info("skip merge to hls");
         }
 
       } else {
