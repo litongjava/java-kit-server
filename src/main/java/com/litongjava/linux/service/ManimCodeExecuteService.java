@@ -35,6 +35,8 @@ public class ManimCodeExecuteService {
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
     List<String> videoFolders = new ArrayList<>();
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p15");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p30");
 
     // 执行脚本
