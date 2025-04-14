@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManimCodeExecuteService {
 
-  public ProcessResult executeCode(String code, Boolean stream, Long sessionId, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(String code, Boolean stream, Long sessionPrt, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
     long id = SnowflakeIdUtils.id();
     String subFolder = "cache" + File.separator + id;
@@ -49,27 +49,29 @@ public class ManimCodeExecuteService {
       if (file.exists()) {
         found = true;
         log.info("found file:{}", filePath);
-        execute.setOutput(filePath.replace("\\", "/"));
+        if (sessionPrt != null) {
+          log.info("merge into:{},{}", sessionPrt, m3u8Path);
+          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, filePath);
+          execute.setOutput(m3u8Path);
 
-        String subPath = "./data/hls/" + id + "/";
-        String name = "main";
-
-        String relPath = subPath + name + ".mp4";
-        File relPathFile = new File(relPath);
-        relPathFile.getParentFile().mkdirs();
-
-        Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        String hlsPath = subPath + name + ".m3u8";
-        log.info("to hls:{}", hlsPath);
-        NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
-
-        execute.setOutput(hlsPath.replace("./", "/"));
-        if (sessionId != null) {
-          log.info("merge into:{},{}", sessionId, m3u8Path);
-          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionId, filePath);
           log.info("merge result:{}", appendVideoSegmentToHls);
         } else {
-          log.info("skip merge to hls");
+          log.info("skip merge to hls:{}", filePath);
+
+          String subPath = "./data/hls/" + id + "/";
+          String name = "main";
+
+          String relPath = subPath + name + ".mp4";
+          File relPathFile = new File(relPath);
+          relPathFile.getParentFile().mkdirs();
+
+          Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+          String hlsPath = subPath + name + ".m3u8";
+          log.info("to hls:{}", hlsPath);
+          NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
+
+          execute.setOutput(hlsPath.replace("./", "/"));
+
         }
       }
     }
