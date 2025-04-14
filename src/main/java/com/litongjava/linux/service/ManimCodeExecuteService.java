@@ -52,8 +52,11 @@ public class ManimCodeExecuteService {
         if (sessionPrt != null) {
           log.info("merge into:{},{}", sessionPrt, m3u8Path);
           String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, filePath);
-          execute.setOutput(m3u8Path);
-
+          if (m3u8Path != null) {
+            execute.setOutput(m3u8Path);
+          } else {
+            execute.setOutput(filePath);
+          }
           log.info("merge result:{}", appendVideoSegmentToHls);
         } else {
           log.info("skip merge to hls:{}", filePath);
@@ -85,12 +88,14 @@ public class ManimCodeExecuteService {
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
-    ProcessBuilder pb;
-    if (osName.contains("windows") || osName.startsWith("mac")) {
-      pb = new ProcessBuilder("python", scriptPath);
-    } else {
-      pb = new ProcessBuilder("python3", scriptPath);
-    }
+    //manim -p -ql scripts/501080953703645184/script.py CombinedScene --fps 10
+    //    ProcessBuilder pb;
+    //    if (osName.contains("windows") || osName.startsWith("mac")) {
+    //      pb = new ProcessBuilder("python", scriptPath);
+    //    } else {
+    //      pb = new ProcessBuilder("python3", scriptPath);
+    //    }
+    ProcessBuilder pb = new ProcessBuilder("manim", "-p", "-ql", "--fps 10", scriptPath, "CombinedScene");
     pb.environment().put("PYTHONIOENCODING", "utf-8");
 
     // 获取脚本所在目录
