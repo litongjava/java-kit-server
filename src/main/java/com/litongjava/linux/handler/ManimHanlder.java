@@ -114,7 +114,7 @@ public class ManimHanlder {
 
     if (stream) {
       response.addServerSentEventsHeader();
-      Tio.send(channelContext, response);
+      Tio.bSend(channelContext, response);
       response.setSend(false);
     }
     try {

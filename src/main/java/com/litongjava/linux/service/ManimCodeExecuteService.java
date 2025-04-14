@@ -13,6 +13,7 @@ import com.litongjava.linux.ProcessResult;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.utils.hutool.FileUtil;
+import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +35,7 @@ public class ManimCodeExecuteService {
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
     List<String> videoFolders = new ArrayList<>();
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p30");
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p15");
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p15");
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p30");
+    addFolder(subFolder, videoFolders);
 
     // 执行脚本
     ProcessResult execute = execute(scriptPath);
@@ -46,6 +44,7 @@ public class ManimCodeExecuteService {
     for (String videoFolder : videoFolders) {
       String filePath = videoFolder + File.separator + "CombinedScene.mp4";
       File file = new File(filePath);
+      log.info("filePath:{}", filePath);
       if (file.exists()) {
         found = true;
         log.info("found file:{}", filePath);
@@ -55,7 +54,7 @@ public class ManimCodeExecuteService {
           if (m3u8Path != null) {
             execute.setOutput(m3u8Path);
           } else {
-            execute.setOutput(filePath);
+            execute.setOutput(filePath.replace("./", "/"));
           }
           log.info("merge result:{}", appendVideoSegmentToHls);
         } else {
@@ -72,10 +71,9 @@ public class ManimCodeExecuteService {
           String hlsPath = subPath + name + ".m3u8";
           log.info("to hls:{}", hlsPath);
           NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
-
           execute.setOutput(hlsPath.replace("./", "/"));
-
         }
+        break;
       }
     }
     if (!found) {
@@ -83,6 +81,22 @@ public class ManimCodeExecuteService {
     }
 
     return execute;
+  }
+
+  private void addFolder(String subFolder, List<String> videoFolders) {
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "480p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "480p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p30");
+
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "480p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "480p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "720p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "720p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p30");
   }
 
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
@@ -95,7 +109,14 @@ public class ManimCodeExecuteService {
     //    } else {
     //      pb = new ProcessBuilder("python3", scriptPath);
     //    }
-    ProcessBuilder pb = new ProcessBuilder("manim", "-p", "-ql", "--fps 10", scriptPath, "CombinedScene");
+    String subPath = FilenameUtils.getSubPath(scriptPath);
+    String baseName = FilenameUtils.getBaseName(subPath);
+    subPath = "cache" + File.separator + baseName;
+    ProcessBuilder pb = new ProcessBuilder("manim", "-p", "-ql", "--fps", "15",
+        //
+        "--media_dir", subPath, "--output_file", "CombinedScene",
+        //
+        scriptPath, "CombinedScene");
     pb.environment().put("PYTHONIOENCODING", "utf-8");
 
     // 获取脚本所在目录
