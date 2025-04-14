@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.linux.ProcessResult;
-import com.litongjava.linux.service.ManimService;
+import com.litongjava.linux.service.ManimCodeExecuteService;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimHanlder {
-  ManimService manimService = Aop.get(ManimService.class);
+  ManimCodeExecuteService manimService = Aop.get(ManimCodeExecuteService.class);
 
   public HttpResponse start(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();

@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.litongjava.linux.ProcessResult;
 import com.litongjava.media.NativeMedia;
@@ -17,7 +18,7 @@ import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimService {
+public class ManimCodeExecuteService {
 
   public ProcessResult executeCode(String code, Boolean stream, Long sessionId, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
@@ -35,9 +36,6 @@ public class ManimService {
     List<String> videoFolders = new ArrayList<>();
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p30");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p30");
-
-    // 定义需要监控的文件夹，注意此处为绝对路径或根据实际情况调整
-    // 如果需要流式发送，则启动文件夹监控线程
 
     // 执行脚本
     ProcessResult execute = execute(scriptPath);
@@ -107,7 +105,17 @@ public class ManimService {
     pb.redirectError(stderrFile);
 
     Process process = pb.start();
-    int exitCode = process.waitFor();
+
+    // 等待40秒，如果超过40秒仍未响应，则强制终止进程
+    boolean finished = process.waitFor(40, TimeUnit.SECONDS);
+    int exitCode;
+    if (!finished) {
+      log.error("Python process did not respond within 40 seconds. Forcibly terminating...");
+      process.destroyForcibly();
+      exitCode = -1; // 特殊退出码表示超时
+    } else {
+      exitCode = process.exitValue();
+    }
 
     // 读取日志文件内容，返回给客户端（如果需要实时返回，可用其他方案监控文件变化）
     String stdoutContent = new String(Files.readAllBytes(stdoutFile.toPath()), StandardCharsets.UTF_8);
