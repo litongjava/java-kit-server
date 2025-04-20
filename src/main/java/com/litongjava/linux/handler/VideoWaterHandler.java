@@ -25,6 +25,10 @@ public class VideoWaterHandler {
     String path = request.getString("path");
     String text = request.getString("text");
     String filename = request.getString("filename");
+    Integer fontSize = request.getInt("font_size");
+    if (fontSize == null) {
+      fontSize = 24;
+    }
 
     if (StrUtil.isBlank(path)) {
       return response.setString("path can not be empty");
@@ -44,11 +48,11 @@ public class VideoWaterHandler {
       String md5 = Md5Utils.getMD5(text);
       String subPath = FilenameUtils.getSubPath(targetFile);
       String baseName = FilenameUtils.getBaseName(targetFile);
-      String outputFile = subPath + File.separator + baseName + "_" + md5 + "." + suffix;
+      String outputFile = subPath + File.separator + baseName + "_" + fontSize + "_" + md5 + "." + suffix;
       file = new File(outputFile);
       if (!file.exists()) {
         try {
-          VideoWaterUtils.addWatermark(targetFile, outputFile, 48, text);
+          VideoWaterUtils.addWatermark(targetFile, outputFile, fontSize, text);
           targetFile = outputFile;
         } catch (IOException e) {
           e.printStackTrace();

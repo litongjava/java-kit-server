@@ -80,7 +80,7 @@ public class HlsHandler {
 
   /**
    * 接口：POST /hls/finish
-   * 会话结束，追加 EXT‑X‑ENDLIST 标签
+   * 会话结束，追加 EXT ENDLIST 标签
    */
   public HttpResponse finish(HttpRequest httpRequest) {
     HttpResponse response = TioRequestContext.getResponse();
