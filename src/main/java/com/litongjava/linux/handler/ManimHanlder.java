@@ -38,7 +38,7 @@ public class ManimHanlder {
 
     String tsPattern = subPath + "/segment_video_%03d.ts";
     int startNumber = 0;
-    int segmentDuration = 5; //每个分段时长（秒）
+    int segmentDuration = 2; //每个分段时长（秒）
     long initPersistentHls = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
 
     ProcessResult processResult = new ProcessResult();
