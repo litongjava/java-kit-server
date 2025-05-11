@@ -18,8 +18,10 @@ from manim.constants import *  # Imports RIGHT, UP, ORIGIN, MED_SMALL_BUFF, EPSI
 from manim.typing import Point3D
 from moviepy import AudioFileClip  # Corrected import for moviepy
 
+assert manimpango.register_font('simhei.ttf')
+
 # --- Font Detection ---
-DEFAULT_FONT = "Noto Sans CJK SC"
+DEFAULT_FONT = "Songti SC"
 FALLBACK_FONTS = ["PingFang SC", "Microsoft YaHei", "SimHei", "Arial Unicode MS"]
 
 
