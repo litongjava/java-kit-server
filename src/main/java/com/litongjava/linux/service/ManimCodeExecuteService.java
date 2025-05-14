@@ -131,6 +131,8 @@ public class ManimCodeExecuteService {
     //manim -ql --fps 15 --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
     ProcessBuilder pb = new ProcessBuilder("manim", "-ql", "--fps", "10",
         //
+        "--progress_bar", "none", "--verbosity", "WARNING",
+        //
         "--media_dir", subFolder, "--output_file", "CombinedScene",
         //
         scriptPath, "CombinedScene");
