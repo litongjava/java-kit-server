@@ -25,8 +25,8 @@ public class ManimCodeExecuteService {
   public ProcessResult executeCode(String code, Boolean stream, Long sessionPrt, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
     long id = SnowflakeIdUtils.id();
-    String subFolder = "cache" + File.separator + id;
-    code = code.replace("#(output_path)", subFolder);
+    String taskFolder = "cache" + File.separator + id;
+    code = code.replace("#(output_path)", taskFolder);
 
     String folder = "scripts" + File.separator + id;
     File fileFolder = new File(folder);
@@ -36,11 +36,17 @@ public class ManimCodeExecuteService {
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
     List<String> videoFolders = new ArrayList<>();
-    addFolder(subFolder, videoFolders);
+    addFolder(taskFolder, videoFolders);
 
     // 执行脚本
-    ProcessResult execute = execute(scriptPath, subFolder);
+    ProcessResult execute = execute(scriptPath, taskFolder);
     execute.setTaskId(id);
+    String textPath = taskFolder + File.separator + "script" + File.separator + "script.txt";
+    File scriptFile = new File(textPath);
+    if (scriptFile.exists()) {
+      String text = FileUtil.readString(scriptFile);
+      execute.setText(text);
+    }
     boolean found = false;
     for (String videoFolder : videoFolders) {
       String filePath = videoFolder + File.separator + "CombinedScene.mp4";
@@ -52,7 +58,9 @@ public class ManimCodeExecuteService {
           log.info("merge into:{},{}", sessionPrt, m3u8Path);
           String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, filePath);
           log.info("merge result:{}", appendVideoSegmentToHls);
-          execute.setOutput("/" + filePath);
+          String videoUrl = "/" + filePath;
+          execute.setOutput(videoUrl);
+          execute.setVideo(videoUrl);
         } else {
           log.info("skip merge to hls:{}", filePath);
 
@@ -67,13 +75,15 @@ public class ManimCodeExecuteService {
           String hlsPath = subPath + name + ".m3u8";
           log.info("to hls:{}", hlsPath);
           NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
-          execute.setOutput(hlsPath.replace("./", "/"));
+          String videoUrl = hlsPath.replace("./", "/");
+          execute.setOutput(videoUrl);
+          execute.setVideo(videoUrl);
         }
         break;
       }
     }
     if (!found) {
-      log.error("not found video in :{}", subFolder);
+      log.error("not found video in :{}", taskFolder);
     }
 
     return execute;
