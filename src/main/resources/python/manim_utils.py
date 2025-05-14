@@ -18,11 +18,9 @@ from manim.constants import *  # Imports RIGHT, UP, ORIGIN, MED_SMALL_BUFF, EPSI
 from manim.typing import Point3D
 from moviepy import AudioFileClip  # Corrected import for moviepy
 
-assert manimpango.register_font('simhei.ttf')
-
 # --- Font Detection ---
-DEFAULT_FONT = "Songti SC"
-FALLBACK_FONTS = ["PingFang SC", "Microsoft YaHei", "SimHei", "Arial Unicode MS"]
+DEFAULT_FONT = "PingFang SC"
+FALLBACK_FONTS = ["Microsoft YaHei", "Songti SC", "Arial Unicode MS"]
 
 
 def get_available_font():
@@ -37,8 +35,11 @@ def get_available_font():
 
 
 # --- TTS Caching Setup ---
-CACHE_DIR = os.path.join(config.media_dir, "audio")
-os.makedirs(CACHE_DIR, exist_ok=True)
+AUDIO_DIR = os.path.join(config.media_dir, "audio")
+os.makedirs(AUDIO_DIR, exist_ok=True)
+
+SCRIPT_DIR = os.path.join(config.media_dir, "script")
+os.makedirs(SCRIPT_DIR, exist_ok=True)
 
 
 class CustomVoiceoverTracker:
@@ -52,13 +53,20 @@ class CustomVoiceoverTracker:
 def get_cache_filename(text: str) -> str:
     """Generates a unique filename based on the MD5 hash of the text."""
     text_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
-    return os.path.join(CACHE_DIR, f"{text_hash}.mp3")
+    return os.path.join(AUDIO_DIR, f"{text_hash}.mp3")
 
 
 @contextmanager
 def custom_voiceover_tts(text: str,
                          token: str = "123456",
                          base_url: str = "https://uni-ai.fly.dev/api/manim/tts"):
+    script_path = os.path.join(SCRIPT_DIR, "script.txt")
+    try:
+        with open(script_path, "a", encoding="utf-8") as log_file:
+            log_file.write(text + "\n")
+    except Exception:
+        # If logging fails, continue without interrupting TTS
+        pass
     """Fetches or uses cached TTS audio, yields a tracker with path and duration."""
     cache_file = get_cache_filename(text)
     audio_file = cache_file
