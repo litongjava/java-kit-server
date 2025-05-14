@@ -92,17 +92,23 @@ public class ManimCodeExecuteService {
   private void addFolder(String subFolder, List<String> videoFolders) {
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "480p30");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "480p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "480p10");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p30");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p15");
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "720p10");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "1080p10");
 
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "480p30");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "480p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "480p10");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "720p30");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "720p15");
-    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "720p10");
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p30");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p15");
+    videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p10");
   }
 
   public static ProcessResult execute(String scriptPath, String subFolder) throws IOException, InterruptedException {
@@ -123,7 +129,7 @@ public class ManimCodeExecuteService {
     }
 
     //manim -ql --fps 15 --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
-    ProcessBuilder pb = new ProcessBuilder("manim", "-ql", "--fps", "15",
+    ProcessBuilder pb = new ProcessBuilder("manim", "-ql", "--fps", "10",
         //
         "--media_dir", subFolder, "--output_file", "CombinedScene",
         //
