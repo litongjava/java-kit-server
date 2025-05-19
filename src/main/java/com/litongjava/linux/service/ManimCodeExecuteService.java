@@ -128,7 +128,7 @@ public class ManimCodeExecuteService {
       Files.copy(in, manimUtilsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
-    //manim -ql --fps 15 --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
+    //manim -ql --fps 10  --progress_bar none --verbosity WARNING --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
     ProcessBuilder pb = new ProcessBuilder("manim", "-ql", "--fps", "10",
         //
         "--progress_bar", "none", "--verbosity", "WARNING",
