@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
@@ -25,11 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DataHandler {
 
-  // HTTP 日期格式
-  private static final SimpleDateFormat HTTP_DATE_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-  static {
-    HTTP_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-  }
+  // HTTP 日期格式（线程安全）
+  private static final DateTimeFormatter HTTP_DATE_FORMAT = DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.US).withZone(ZoneId.of("GMT"));
 
   public HttpResponse index(HttpRequest request) {
     String path = request.getRequestLine().getPath();
@@ -72,7 +70,8 @@ public class DataHandler {
 
   private void setCacheHeaders(HttpResponse response, long lastModified, String etag, String contentType) {
     // 设置 Last-Modified
-    response.setHeader("Last-Modified", HTTP_DATE_FORMAT.format(new Date(lastModified)));
+    String lastModStr = HTTP_DATE_FORMAT.format(Instant.ofEpochMilli(lastModified));
+    response.setHeader("Last-Modified", lastModStr);
 
     // 设置 ETag
     response.setHeader("ETag", etag);
@@ -82,55 +81,15 @@ public class DataHandler {
     response.setHeader("Cache-Control", cacheControl);
 
     // 设置 Expires (1年后过期，适用于静态资源)
-    long expiresTime = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000); // 1年
-    response.setHeader("Expires", HTTP_DATE_FORMAT.format(new Date(expiresTime)));
+    long expiresTime = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000);
+    String expiresStr = HTTP_DATE_FORMAT.format(Instant.ofEpochMilli(expiresTime));
+    response.setHeader("Expires", expiresStr);
 
     // Cloudflare 特定头部
-    response.setHeader("CF-Cache-Status", "MISS"); // 让 Cloudflare 知道这是可缓存的内容
+    response.setHeader("CF-Cache-Status", "MISS");
 
-    // 设置 Vary 头部 (告诉 Cloudflare 基于什么请求头进行缓存区分)
+    // 设置 Vary 头部
     response.setHeader("Vary", "Accept-Encoding");
-  }
-
-  private String getCacheControlForContentType(String contentType) {
-    if (contentType == null) {
-      return "public, max-age=3600"; // 1小时
-    }
-
-    // 根据不同的文件类型设置不同的缓存时间
-    if (contentType.startsWith("image/")) {
-      return "public, max-age=31536000, immutable"; // 图片缓存1年
-    } else if (contentType.startsWith("video/") || contentType.startsWith("audio/")) {
-      return "public, max-age=31536000, immutable"; // 媒体文件缓存1年
-    } else if (contentType.equals("text/css") || contentType.equals("application/javascript")) {
-      return "public, max-age=31536000, immutable"; // CSS/JS缓存1年
-    } else if (contentType.startsWith("font/") || contentType.equals("application/font-woff") || contentType.equals("application/font-woff2")) {
-      return "public, max-age=31536000, immutable"; // 字体文件缓存1年
-    } else if (contentType.startsWith("text/")) {
-      return "public, max-age=3600"; // 文本文件缓存1小时
-    } else {
-      return "public, max-age=86400"; // 其他文件缓存1天
-    }
-  }
-
-  private String generateETag(File file, long lastModified, long fileLength) {
-    try {
-      // 使用文件路径、大小、修改时间生成简单的 ETag
-      String input = file.getAbsolutePath() + fileLength + lastModified;
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] hash = md.digest(input.getBytes());
-
-      StringBuilder sb = new StringBuilder();
-      sb.append('"');
-      for (byte b : hash) {
-        sb.append(String.format("%02x", b));
-      }
-      sb.append('"');
-      return sb.toString();
-    } catch (Exception e) {
-      // 如果生成失败，使用简单的 ETag
-      return "\"" + lastModified + "-" + fileLength + "\"";
-    }
   }
 
   private boolean isClientCacheValid(HttpRequest request, long lastModified, String etag) {
@@ -144,9 +103,9 @@ public class DataHandler {
     String ifModifiedSince = request.getHeader("If-Modified-Since");
     if (ifModifiedSince != null) {
       try {
-        Date clientDate = HTTP_DATE_FORMAT.parse(ifModifiedSince);
-        Date fileDate = new Date(lastModified);
-        if (!fileDate.after(clientDate)) {
+        ZonedDateTime clientDate = ZonedDateTime.parse(ifModifiedSince, HTTP_DATE_FORMAT);
+        Instant fileInstant = Instant.ofEpochMilli(lastModified);
+        if (!fileInstant.isAfter(clientDate.toInstant())) {
           return true;
         }
       } catch (Exception e) {
@@ -155,6 +114,43 @@ public class DataHandler {
     }
 
     return false;
+  }
+
+  private String getCacheControlForContentType(String contentType) {
+    if (contentType == null) {
+      return "public, max-age=3600";
+    }
+    if (contentType.startsWith("image/")) {
+      return "public, max-age=31536000, immutable";
+    } else if (contentType.startsWith("video/") || contentType.startsWith("audio/")) {
+      return "public, max-age=31536000, immutable";
+    } else if (contentType.equals("text/css") || contentType.equals("application/javascript")) {
+      return "public, max-age=31536000, immutable";
+    } else if (contentType.startsWith("font/") || contentType.equals("application/font-woff") || contentType.equals("application/font-woff2")) {
+      return "public, max-age=31536000, immutable";
+    } else if (contentType.startsWith("text/")) {
+      return "public, max-age=3600";
+    } else {
+      return "public, max-age=86400";
+    }
+  }
+
+  private String generateETag(File file, long lastModified, long fileLength) {
+    try {
+      String input = file.getAbsolutePath() + fileLength + lastModified;
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte[] hash = md.digest(input.getBytes());
+
+      StringBuilder sb = new StringBuilder();
+      sb.append('"');
+      for (byte b : hash) {
+        sb.append(String.format("%02x", b));
+      }
+      sb.append('"');
+      return sb.toString();
+    } catch (Exception e) {
+      return "\"" + lastModified + "-" + fileLength + "\"";
+    }
   }
 
   private HttpResponse handleRangeRequest(HttpResponse response, File file, String range, long fileLength, String contentType) {
@@ -173,7 +169,6 @@ public class DataHandler {
 
       long contentLength = end - start + 1;
       byte[] data = readFileRange(file, start, contentLength);
-
       if (data == null) {
         response.setStatus(500);
         return response;
@@ -184,13 +179,11 @@ public class DataHandler {
       response.setHeader("Accept-Ranges", "bytes");
       response.setHeader(ResponseHeaderKey.Content_Length, String.valueOf(contentLength));
       Resps.bytesWithContentType(response, data, contentType);
-
     } catch (Exception e) {
       response.setStatus(416);
       response.setHeader("Content-Range", "bytes */" + fileLength);
     }
 
-    // 对于 Range 请求，通常不进行 gzip 压缩
     response.setHasGzipped(false);
     return response;
   }
@@ -206,11 +199,10 @@ public class DataHandler {
     response.setHeader(ResponseHeaderKey.Content_Length, String.valueOf(fileLength));
     Resps.bytesWithContentType(response, fileData, contentType);
 
-    // 视频文件不进行 gzip 压缩
     if (contentType != null && (contentType.startsWith("video/") || contentType.startsWith("audio/"))) {
-      response.setHasGzipped(true); // 标记为已处理，但实际不压缩
+      response.setHasGzipped(true);
     } else {
-      response.setHasGzipped(false); // 让框架决定是否压缩
+      response.setHasGzipped(false);
     }
 
     return response;
@@ -229,9 +221,7 @@ public class DataHandler {
           break;
         bytesRead += read;
       }
-
       return buffer.array();
-
     } catch (IOException e) {
       e.printStackTrace();
       return null;
@@ -243,14 +233,11 @@ public class DataHandler {
 
       long fileSize = channel.size();
       ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
-
       while (buffer.hasRemaining()) {
         if (channel.read(buffer) == -1)
           break;
       }
-
       return buffer.array();
-
     } catch (IOException e) {
       e.printStackTrace();
       return null;
