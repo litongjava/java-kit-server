@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DataHandler {
 
-  // HTTP 日期格式（线程安全）
   private static final DateTimeFormatter HTTP_DATE_FORMAT = DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.US).withZone(ZoneId.of("GMT"));
 
   public HttpResponse index(HttpRequest request) {
@@ -51,7 +50,7 @@ public class DataHandler {
     String etag = generateETag(file, lastModified, fileLength);
 
     // 设置缓存相关头部
-    setCacheHeaders(response, lastModified, etag, contentType);
+    setCacheHeaders(response, lastModified, etag, contentType, suffix);
 
     // 检查客户端缓存
     if (isClientCacheValid(request, lastModified, etag)) {
@@ -68,7 +67,16 @@ public class DataHandler {
     }
   }
 
-  private void setCacheHeaders(HttpResponse response, long lastModified, String etag, String contentType) {
+  private void setCacheHeaders(HttpResponse response, long lastModified, String etag, String contentType, String suffix) {
+
+    // —— special-case: m3u8 不缓存 —— 
+    if ("m3u8".equalsIgnoreCase(suffix)) {
+      response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      response.setHeader("Pragma", "no-cache");
+      response.setHeader("Expires", "0");
+      return;
+    }
+
     // 设置 Last-Modified
     String lastModStr = HTTP_DATE_FORMAT.format(Instant.ofEpochMilli(lastModified));
     response.setHeader("Last-Modified", lastModStr);
