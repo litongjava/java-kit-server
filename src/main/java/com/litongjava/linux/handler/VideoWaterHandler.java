@@ -25,6 +25,9 @@ public class VideoWaterHandler {
     String path = request.getString("path");
     String text = request.getString("text");
     String filename = request.getString("filename");
+    if (StrUtil.isNotBlank(filename)) {
+      filename += ".mp4";
+    }
     Integer fontSize = request.getInt("font_size");
     if (fontSize == null) {
       fontSize = 24;
