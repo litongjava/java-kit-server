@@ -27,6 +27,8 @@ public class VideoWaterHandler {
     String filename = request.getString("filename");
     if (StrUtil.isNotBlank(filename)) {
       filename += ".mp4";
+    } else {
+      filename = "main.mp4";
     }
     Integer fontSize = request.getInt("font_size");
     if (fontSize == null) {
