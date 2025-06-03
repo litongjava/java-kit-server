@@ -50,7 +50,7 @@ public class VideoWaterHandler {
     String contentType = ContentTypeUtils.getContentType(suffix);
 
     if (StrUtil.isNotBlank(text)) {
-      String md5 = Md5Utils.getMD5(text);
+      String md5 = Md5Utils.md5Hex(text);
       String subPath = FilenameUtils.getSubPath(targetFile);
       String baseName = FilenameUtils.getBaseName(targetFile);
       String outputFile = subPath + File.separator + baseName + "_" + fontSize + "_" + md5 + "." + suffix;
