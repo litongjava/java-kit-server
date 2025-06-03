@@ -1,3 +1,4 @@
+
 # manim_utils.py
 from enum import Enum
 import itertools
@@ -10,7 +11,7 @@ from contextlib import contextmanager
 import manimpango
 import numpy as np  # Added for np.array, np.allclose
 from PIL.GimpGradientFile import EPSILON
-from manim import Mobject, Text, Scene, VGroup, MathTex, Axes, \
+from manim import Mobject, Text, Scene, Group, VGroup, MathTex, Axes, \
     WHITE, BLACK, RED, GREEN, BLUE, YELLOW, PURPLE, ORANGE, TEAL, \
     PINK  # DOWN, RIGHT, etc. are imported from manim.constants
 from manim import config
@@ -116,6 +117,9 @@ class LayoutRegion:
         self.y_min: float = y_min
         self.y_max: float = y_max
 
+        self._scaled_factor: float = 1.0
+        self._placed_mobjects: list[Mobject] = []
+
     @property
     def width(self) -> float:
         return self.x_max - self.x_min
@@ -134,18 +138,23 @@ class LayoutRegion:
         This method ensures the mobject will be placed entirely inside the rectangle.
         In terms of oversize, the mobject will be rescaled uniformly to fit in.
         """
-        mobject_w = mobject.get_width()
-        mobject_h = mobject.get_height()
+        Group(*self._placed_mobjects).scale(1.0 / self._scaled_factor)  # recover
+        if mobject not in self._placed_mobjects:
+            self._placed_mobjects.append(mobject)
+        group = Group(*self._placed_mobjects).arrange(DOWN)
+
+        mobject_w = group.get_width()
+        mobject_h = group.get_height()
 
         if mobject_w <= EPSILON or mobject_h <= EPSILON:
-            mobject.move_to(self.get_center())
+            group.move_to(self.get_center())
             return mobject
 
         region_w = self.width
         region_h = self.height
 
         if region_w <= EPSILON or region_h <= EPSILON:
-            mobject.move_to(self.get_center())
+            group.move_to(self.get_center())
             return mobject
 
         current_buff = buff
@@ -170,8 +179,9 @@ class LayoutRegion:
             scale_factor_h = region_h / mobject_h
             scale_factor = min(scale_factor_w, scale_factor_h)
 
+        self._scaled_factor = scale_factor
         if scale_factor < 1.0 - EPSILON:
-            mobject.scale(scale_factor)
+            group.scale(scale_factor)
 
         center_coords = self.get_center()
 
@@ -182,7 +192,8 @@ class LayoutRegion:
         target_point_coords[0] += aligned_edge[0] * eff_half_width
         target_point_coords[1] += aligned_edge[1] * eff_half_height
 
-        return mobject.move_to(target_point_coords, aligned_edge=aligned_edge)
+        group.move_to(target_point_coords, aligned_edge=aligned_edge)
+        return mobject
 
 
 class LayoutAtom:
