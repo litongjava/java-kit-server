@@ -1,7 +1,6 @@
 package com.litongjava.linux.handler;
 
 import com.litongjava.linux.ProcessResult;
-import com.litongjava.linux.utils.CmdInterpreterUtils;
 import com.litongjava.linux.utils.PythonInterpreterUtils;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
