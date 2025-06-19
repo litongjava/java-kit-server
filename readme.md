@@ -36,7 +36,7 @@
    进入项目目录，根据使用的构建工具进行编译。例如，如果使用 Maven：
    ```bash
    cd java-kit-server
-   mvn clean install
+   mvn clean package -DskipTests -Pproduction -q
    ```
 3. **运行应用**  
    编译完成后，运行生成的 jar 包：

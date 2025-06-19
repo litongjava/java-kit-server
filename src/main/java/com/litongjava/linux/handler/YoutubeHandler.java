@@ -19,6 +19,7 @@ public class YoutubeHandler {
     HttpResponse httpResponse = TioRequestContext.getResponse();
 
     String url = request.getParam("url");
+    log.info("download:{}", url);
     String id = YouTubeIdUtil.extractVideoId(url);
     File file = YtDlpUtils.downloadMp3(id, true);
 
