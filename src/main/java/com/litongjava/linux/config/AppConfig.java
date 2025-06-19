@@ -3,6 +3,7 @@ package com.litongjava.linux.config;
 import com.litongjava.context.BootConfiguration;
 import com.litongjava.linux.handler.CmdHanlder;
 import com.litongjava.linux.handler.DataHandler;
+import com.litongjava.linux.handler.DownloadHandler;
 import com.litongjava.linux.handler.HlsHandler;
 import com.litongjava.linux.handler.ManimHanlder;
 import com.litongjava.linux.handler.ManimImageHandler;
@@ -10,6 +11,7 @@ import com.litongjava.linux.handler.PingHandler;
 import com.litongjava.linux.handler.PythonHanlder;
 import com.litongjava.linux.handler.ScriptsHandler;
 import com.litongjava.linux.handler.VideoWaterHandler;
+import com.litongjava.linux.handler.YoutubeHandler;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
 import com.litongjava.tio.boot.satoken.FixedTokenInterceptor;
@@ -55,6 +57,12 @@ public class AppConfig implements BootConfiguration {
 
       VideoWaterHandler videoWaterHandler = new VideoWaterHandler();
       r.add("/video/download/water", videoWaterHandler::index);
+
+      YoutubeHandler youtubeHandler = new YoutubeHandler();
+      r.add("/youtube/download/mp3", youtubeHandler::downloadMp3);
+
+      DownloadHandler downloadHandler = new DownloadHandler();
+      r.add("/download", downloadHandler::donwload);
     }
 
     String authToken = EnvUtils.get("app.auth.token");
@@ -67,7 +75,9 @@ public class AppConfig implements BootConfiguration {
     model.addBlockUrl("/**"); // 拦截所有路由
 
     // 设置例外路由 index
-    model.addAllowUrls("/", "/ping", "/media/**", "/cache/**", "/hls/**", "/data/**", "/scripts/**", "/video/download/water");
+    model.addAllowUrls("/", "/ping", "/download", "/youtube/**", "/media/**", "/cache/**",
+        //
+        "/hls/**", "/data/**", "/scripts/**", "/video/download/water");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
