@@ -1,8 +1,8 @@
-# java-linux
+# java-kit-server
 
 ## 项目简介
 
-**java-linux** 是一个基于 Java 开发并运行于 Linux 环境下的项目，旨在为开发者提供一个高效、稳定和易于扩展的平台。该项目结合了 Java 的跨平台优势和 Linux 的高性能稳定性，适用于各种服务端应用、自动化工具和企业级系统开发。
+**java-kit-server** 是一个基于 Java 开发并运行于 Linux 环境下的项目，旨在为开发者提供一个高效、稳定和易于扩展的平台。该项目结合了 Java 的跨平台优势和 Linux 的高性能稳定性，适用于各种服务端应用、自动化工具和企业级系统开发。
 
 ## 功能
 - 执行linux命令
@@ -30,18 +30,18 @@
 1. **克隆仓库**  
    打开终端并运行以下命令将项目克隆到本地：
    ```bash
-   git clone https://github.com/litongjava/java-linux.git
+   git clone https://github.com/litongjava/java-kit-server.git
    ```
 2. **编译项目**  
    进入项目目录，根据使用的构建工具进行编译。例如，如果使用 Maven：
    ```bash
-   cd java-linux
+   cd java-kit-server
    mvn clean install
    ```
 3. **运行应用**  
    编译完成后，运行生成的 jar 包：
    ```bash
-   java -jar target/java-linux-1.0.0.jar
+   java -jar target/java-kit-server-1.0.0.jar
    ```
 
 ## 使用说明
