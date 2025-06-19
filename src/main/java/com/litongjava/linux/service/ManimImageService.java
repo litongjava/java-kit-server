@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import com.litongjava.linux.ProcessResult;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManimImageService {
 
-  public ProcessResult executeCode(String code) throws IOException, InterruptedException {
+  public CommandLineResult executeCode(String code) throws IOException, InterruptedException {
     long id = SnowflakeIdUtils.id();
 
     String folder = "scripts" + File.separator + id;
@@ -27,7 +27,7 @@ public class ManimImageService {
     String imageFolder = "media" + File.separator + "images" + File.separator + id;
     log.info("imageFolder:{}", imageFolder);
     // 执行脚本
-    ProcessResult execute = execute(scriptPath);
+    CommandLineResult execute = execute(scriptPath);
     execute.setTaskId(id);
     File imageFolderFile = new File(imageFolder);
     if (imageFolderFile.exists()) {
@@ -47,7 +47,7 @@ public class ManimImageService {
     return execute;
   }
 
-  public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
+  public static CommandLineResult execute(String scriptPath) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
     ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
@@ -75,7 +75,7 @@ public class ManimImageService {
     String stdoutContent = new String(Files.readAllBytes(stdoutFile.toPath()), StandardCharsets.UTF_8);
     String stderrContent = new String(Files.readAllBytes(stderrFile.toPath()), StandardCharsets.UTF_8);
 
-    ProcessResult result = new ProcessResult();
+    CommandLineResult result = new CommandLineResult();
     result.setExitCode(exitCode);
     result.setStdOut(stdoutContent);
     result.setStdErr(stderrContent);

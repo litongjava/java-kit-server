@@ -2,7 +2,7 @@ package com.litongjava.linux.utils;
 
 import org.junit.Test;
 
-import com.litongjava.linux.ProcessResult;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 import com.litongjava.tio.utils.json.JsonUtils;
 
 public class PythonInterpreterUtilsTest {
@@ -11,7 +11,7 @@ public class PythonInterpreterUtilsTest {
   public void executeScript() throws Exception {
     // 假设你的脚本文件名叫 "myscript.py"
     String scriptPath = "myscript.py";
-    ProcessResult result = PythonInterpreterUtils.executeScript(scriptPath);
+    CommandLineResult result = PythonInterpreterUtils.executeScript(scriptPath);
     System.out.println(JsonUtils.toJson(result));
   }
 }

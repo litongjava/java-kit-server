@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.linux.ProcessResult;
 import com.litongjava.linux.service.ManimCodeExecuteService;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
@@ -13,6 +12,7 @@ import com.litongjava.tio.core.Tio;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
 import com.litongjava.tio.http.server.util.CORSUtils;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.json.JsonUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
@@ -41,7 +41,7 @@ public class ManimHanlder {
     int segmentDuration = 2; //每个分段时长（秒）
     long initPersistentHls = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
 
-    ProcessResult processResult = new ProcessResult();
+    CommandLineResult processResult = new CommandLineResult();
     processResult.setSessionId(sessionId);
     processResult.setSessionIdPrt(initPersistentHls);
     processResult.setOutput(m3u8Path.replace("./", "/"));
@@ -54,7 +54,7 @@ public class ManimHanlder {
     CORSUtils.enableCORS(response);
 
     Long session_prt = request.getLong("session_prt");
-    ProcessResult processResult = new ProcessResult();
+    CommandLineResult processResult = new CommandLineResult();
     if (session_prt == null) {
       processResult.setStdErr("m3u8_path can not be empty");
       return response.setJson(processResult);
@@ -118,7 +118,7 @@ public class ManimHanlder {
       response.setSend(false);
     }
     try {
-      ProcessResult executeScript = manimService.executeCode(code, stream, session_prt, m3u8Path, channelContext);
+      CommandLineResult executeScript = manimService.executeCode(code, stream, session_prt, m3u8Path, channelContext);
       if (executeScript != null) {
         response.setJson(executeScript);
       }

@@ -1,10 +1,10 @@
 package com.litongjava.linux.handler;
 
-import com.litongjava.linux.ProcessResult;
 import com.litongjava.linux.utils.PythonInterpreterUtils;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +17,7 @@ public class PythonHanlder {
     HttpResponse response = TioRequestContext.getResponse();
 
     try {
-      ProcessResult executeScript = PythonInterpreterUtils.executeCode(code);
+      CommandLineResult executeScript = PythonInterpreterUtils.executeCode(code);
       executeScript.setExecuteCode(code);
       response.setJson(executeScript);
     } catch (Exception e) {

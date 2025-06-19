@@ -1,12 +1,12 @@
 package com.litongjava.linux.handler;
 
 import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.linux.ProcessResult;
 import com.litongjava.linux.service.ManimImageService;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
 import com.litongjava.tio.http.server.util.CORSUtils;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ public class ManimImageHandler {
     String code = request.getBodyString();
 
     try {
-      ProcessResult executeScript = manimService.executeCode(code);
+      CommandLineResult executeScript = manimService.executeCode(code);
       if (executeScript != null) {
         response.setJson(executeScript);
       }

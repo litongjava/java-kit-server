@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-import com.litongjava.linux.ProcessResult;
+import com.litongjava.tio.utils.commandline.CommandLineResult;
 
 public class CmdInterpreterUtils {
 
-  public static ProcessResult executeCmd(String cmd) {
-    ProcessResult result = new ProcessResult();
+  public static CommandLineResult executeCmd(String cmd) {
+    CommandLineResult result = new CommandLineResult();
 
     try {
       ProcessBuilder processBuilder;
