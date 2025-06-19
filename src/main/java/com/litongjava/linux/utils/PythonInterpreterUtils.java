@@ -10,13 +10,13 @@ import java.util.List;
 
 import com.jfinal.kit.Kv;
 import com.litongjava.template.PythonCodeEngine;
-import com.litongjava.tio.utils.commandline.CommandLineResult;
+import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.encoder.Base64Utils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 public class PythonInterpreterUtils {
-  public static CommandLineResult execute(String scriptPath, String script_dir) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, String script_dir) throws IOException, InterruptedException {
     String imagesDir = script_dir + File.separator + "images";
     File imagesFolder = new File(imagesDir);
     if (!imagesFolder.exists()) {
@@ -60,7 +60,7 @@ public class PythonInterpreterUtils {
     int exitCode = process.waitFor();
 
     // 构造返回实体
-    CommandLineResult result = new CommandLineResult();
+    ProcessResult result = new ProcessResult();
     result.setExitCode(exitCode);
     result.setStdOut(outputBuilder.toString());
     result.setStdErr(errorBuilder.toString());
@@ -79,7 +79,7 @@ public class PythonInterpreterUtils {
 
   /**
    */
-  public static CommandLineResult executeCode(String code) throws IOException, InterruptedException {
+  public static ProcessResult executeCode(String code) throws IOException, InterruptedException {
 
     long id = SnowflakeIdUtils.id();
     String folder = "scripts" + File.separator + id;
@@ -89,12 +89,12 @@ public class PythonInterpreterUtils {
     }
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-    CommandLineResult execute = execute(scriptPath, folder);
+    ProcessResult execute = execute(scriptPath, folder);
     execute.setTaskId(id);
     return execute;
   }
 
-  public static CommandLineResult executeScript(String scriptPath) throws IOException, InterruptedException {
+  public static ProcessResult executeScript(String scriptPath) throws IOException, InterruptedException {
     long id = SnowflakeIdUtils.id();
     String folder = "scripts" + File.separator + id;
     File fileFolder = new File(folder);
