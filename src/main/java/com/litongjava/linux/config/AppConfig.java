@@ -10,6 +10,7 @@ import com.litongjava.linux.handler.ManimImageHandler;
 import com.litongjava.linux.handler.PingHandler;
 import com.litongjava.linux.handler.PythonHanlder;
 import com.litongjava.linux.handler.ScriptsHandler;
+import com.litongjava.linux.handler.SpeedTestHandler;
 import com.litongjava.linux.handler.VideoWaterHandler;
 import com.litongjava.linux.handler.YoutubeHandler;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
@@ -63,6 +64,9 @@ public class AppConfig implements BootConfiguration {
 
       DownloadHandler downloadHandler = new DownloadHandler();
       r.add("/download", downloadHandler::donwload);
+      
+      SpeedTestHandler speedTestHandler = new SpeedTestHandler();
+      r.add("/speed/test", speedTestHandler::output);
     }
 
     String authToken = EnvUtils.get("app.auth.token");
@@ -77,7 +81,7 @@ public class AppConfig implements BootConfiguration {
     // 设置例外路由 index
     model.addAllowUrls("/", "/ping", "/download", "/youtube/**", "/media/**", "/cache/**",
         //
-        "/hls/**", "/data/**", "/scripts/**", "/video/download/water");
+        "/hls/**", "/data/**", "/scripts/**", "/video/download/water","/speed/test");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);

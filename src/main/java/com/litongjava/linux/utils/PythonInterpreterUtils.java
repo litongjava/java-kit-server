@@ -10,8 +10,8 @@ import java.util.List;
 
 import com.jfinal.kit.Kv;
 import com.litongjava.template.PythonCodeEngine;
+import com.litongjava.tio.utils.base64.Base64Utils;
 import com.litongjava.tio.utils.commandline.ProcessResult;
-import com.litongjava.tio.utils.encoder.Base64Utils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 

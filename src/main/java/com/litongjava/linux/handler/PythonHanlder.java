@@ -23,7 +23,7 @@ public class PythonHanlder {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       response.setStatus(500);
-      response.setString(e.getMessage());
+      response.body(e.getMessage());
     }
     return response;
   }

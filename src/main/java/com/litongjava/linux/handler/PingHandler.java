@@ -7,7 +7,7 @@ import com.litongjava.tio.http.common.HttpResponse;
 public class PingHandler {
   public HttpResponse ping(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();
-    response.setString("pong");
+    response.body("pong");
     return response;
   }
 }

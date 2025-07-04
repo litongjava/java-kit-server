@@ -36,7 +36,7 @@ public class VideoWaterHandler {
     }
 
     if (StrUtil.isBlank(path)) {
-      return response.setString("path can not be empty");
+      return response.body("path can not be empty");
     }
 
     String targetFile = "." + path;
@@ -61,10 +61,10 @@ public class VideoWaterHandler {
           targetFile = outputFile;
         } catch (IOException e) {
           e.printStackTrace();
-          return response.setString(e.getMessage());
+          return response.body(e.getMessage());
         } catch (InterruptedException e) {
           e.printStackTrace();
-          return response.setString(e.getMessage());
+          return response.body(e.getMessage());
         }
       }
     }
