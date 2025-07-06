@@ -4,6 +4,7 @@ import com.litongjava.context.BootConfiguration;
 import com.litongjava.linux.handler.CmdHanlder;
 import com.litongjava.linux.handler.DataHandler;
 import com.litongjava.linux.handler.DownloadHandler;
+import com.litongjava.linux.handler.GzipBombTestHandler;
 import com.litongjava.linux.handler.HlsHandler;
 import com.litongjava.linux.handler.ManimHanlder;
 import com.litongjava.linux.handler.ManimImageHandler;
@@ -13,6 +14,7 @@ import com.litongjava.linux.handler.ScriptsHandler;
 import com.litongjava.linux.handler.SpeedTestHandler;
 import com.litongjava.linux.handler.VideoWaterHandler;
 import com.litongjava.linux.handler.YoutubeHandler;
+import com.litongjava.linux.inteceptor.MyControllerInteceptor;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
 import com.litongjava.tio.boot.satoken.FixedTokenInterceptor;
@@ -26,6 +28,8 @@ public class AppConfig implements BootConfiguration {
   public void config() {
 
     TioBootServer server = TioBootServer.me();
+    server.setControllerInterceptor(new MyControllerInteceptor());
+
     HttpRequestRouter r = server.getRequestRouter();
     if (r != null) {
       PingHandler pingHanlder = new PingHandler();
@@ -64,9 +68,12 @@ public class AppConfig implements BootConfiguration {
 
       DownloadHandler downloadHandler = new DownloadHandler();
       r.add("/download", downloadHandler::donwload);
-      
+
       SpeedTestHandler speedTestHandler = new SpeedTestHandler();
       r.add("/speed/test", speedTestHandler::output);
+
+      GzipBombTestHandler gzipBombTestHandler = new GzipBombTestHandler();
+      r.add("/gzip/bomb/test", gzipBombTestHandler::output);
     }
 
     String authToken = EnvUtils.get("app.auth.token");
@@ -81,7 +88,7 @@ public class AppConfig implements BootConfiguration {
     // 设置例外路由 index
     model.addAllowUrls("/", "/ping", "/download", "/youtube/**", "/media/**", "/cache/**",
         //
-        "/hls/**", "/data/**", "/scripts/**", "/video/download/water","/speed/test");
+        "/hls/**", "/data/**", "/scripts/**", "/video/download/water", "/speed/test", "/gzip/bomb/test");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);

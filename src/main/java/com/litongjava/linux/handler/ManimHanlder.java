@@ -91,7 +91,7 @@ public class ManimHanlder {
       log.info("merged:{}", merged);
       if (merged) {
         double videoLength = NativeMedia.getVideoLength(outputPath);
-        processResult.setViode_length(videoLength);
+        processResult.setVideo_length(videoLength);
       }
     }
 

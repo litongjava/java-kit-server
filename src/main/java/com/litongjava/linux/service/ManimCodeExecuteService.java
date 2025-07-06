@@ -49,20 +49,22 @@ public class ManimCodeExecuteService {
     }
     boolean found = false;
     for (String videoFolder : videoFolders) {
-      String filePath = videoFolder + File.separator + "CombinedScene.mp4";
-      File file = new File(filePath);
+      String videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
+      File file = new File(videoFilePath);
       if (file.exists()) {
         found = true;
-        log.info("found file:{}", filePath);
+        double videoLength = NativeMedia.getVideoLength(videoFilePath);
+        execute.setVideo_length(videoLength);
+        log.info("found file:{}", videoFilePath);
         if (sessionPrt != null) {
           log.info("merge into:{},{}", sessionPrt, m3u8Path);
-          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, filePath);
+          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, videoFilePath);
           log.info("merge result:{}", appendVideoSegmentToHls);
-          String videoUrl = "/" + filePath;
+          String videoUrl = "/" + videoFilePath;
           execute.setOutput(videoUrl);
           execute.setVideo(videoUrl);
         } else {
-          log.info("skip merge to hls:{}", filePath);
+          log.info("skip merge to hls:{}", videoFilePath);
 
           String subPath = "./data/hls/" + id + "/";
           String name = "main";
