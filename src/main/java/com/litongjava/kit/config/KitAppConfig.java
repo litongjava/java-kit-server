@@ -75,7 +75,7 @@ public class KitAppConfig implements BootConfiguration {
 
       GzipBombTestHandler gzipBombTestHandler = new GzipBombTestHandler();
       r.add("/gzip/bomb/test", gzipBombTestHandler::output);
-      
+
       LLMProxyHandler LLMProxyHandler = new LLMProxyHandler();
       r.add("/openai/v1/chat/completions", LLMProxyHandler::completions);
       r.add("/anthropic/v1/messages", LLMProxyHandler::completions);
@@ -94,7 +94,9 @@ public class KitAppConfig implements BootConfiguration {
     // 设置例外路由 index
     model.addAllowUrls("/", "/ping", "/download", "/youtube/**", "/media/**", "/cache/**",
         //
-        "/hls/**", "/data/**", "/scripts/**", "/video/download/water", "/speed/test", "/gzip/bomb/test");
+        "/hls/**", "/data/**", "/scripts/**", "/video/download/water", "/speed/test", "/gzip/bomb/test",
+        //
+        "openai/**", "/anthropic/**", "/google/**");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
