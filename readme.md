@@ -43,7 +43,36 @@
    ```bash
    java -jar target/java-kit-server-1.0.0.jar
    ```
+## systemctl user
+```shell
+mkdir -p ~/.config/systemd/user/
+vi ~/.config/systemd/user/java-kit-server.service
+```
 
+```ini
+[Unit]
+Description=java-kit-server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/data/apps/java-kit-server
+ExecStart=/usr/java/jdk1.8.0_411/bin/java -jar java-kit-server-1.0.0.jar
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+```
+
+```shell
+scu daemon-reload
+```
+
+```shell
+scu start java-kit-server
+```
 ## 使用说明
 
 在成功启动应用后，你可以通过以下方式进行访问和配置：
