@@ -23,7 +23,7 @@ import com.litongjava.tio.http.server.intf.HttpRequestInterceptor;
 import com.litongjava.tio.http.server.router.HttpRequestRouter;
 import com.litongjava.tio.utils.environment.EnvUtils;
 
-public class AppConfig implements BootConfiguration {
+public class KitAppConfig implements BootConfiguration {
 
   public void config() {
 
