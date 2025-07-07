@@ -15,6 +15,7 @@ import com.litongjava.kit.handler.SpeedTestHandler;
 import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
 import com.litongjava.kit.inteceptor.MyControllerInteceptor;
+import com.litongjava.llm.proxy.handler.LLMProxyHandler;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
 import com.litongjava.tio.boot.satoken.FixedTokenInterceptor;
@@ -74,6 +75,11 @@ public class KitAppConfig implements BootConfiguration {
 
       GzipBombTestHandler gzipBombTestHandler = new GzipBombTestHandler();
       r.add("/gzip/bomb/test", gzipBombTestHandler::output);
+      
+      LLMProxyHandler LLMProxyHandler = new LLMProxyHandler();
+      r.add("/openai/v1/chat/completions", LLMProxyHandler::completions);
+      r.add("/anthropic/v1/messages", LLMProxyHandler::completions);
+      r.add("/google/v1beta/models/*", LLMProxyHandler::completions);
     }
 
     String authToken = EnvUtils.get("app.auth.token");
