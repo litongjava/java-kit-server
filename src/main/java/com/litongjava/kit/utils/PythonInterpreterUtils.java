@@ -1,4 +1,4 @@
-package com.litongjava.linux.utils;
+package com.litongjava.kit.utils;
 
 import java.io.BufferedReader;
 import java.io.File;

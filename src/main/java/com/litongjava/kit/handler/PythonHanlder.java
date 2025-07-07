@@ -1,6 +1,6 @@
-package com.litongjava.linux.handler;
+package com.litongjava.kit.handler;
 
-import com.litongjava.linux.utils.CmdInterpreterUtils;
+import com.litongjava.kit.utils.PythonInterpreterUtils;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -9,16 +9,16 @@ import com.litongjava.tio.utils.commandline.ProcessResult;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CmdHanlder {
+public class PythonHanlder {
 
   public HttpResponse index(HttpRequest request) {
-    String cmd = request.getBodyString();
-    log.info("cmd:{}", cmd);
+    String code = request.getBodyString();
+    log.info("code:{}", code);
     HttpResponse response = TioRequestContext.getResponse();
 
     try {
-      ProcessResult executeScript = CmdInterpreterUtils.executeCmd(cmd);
-      executeScript.setExecuteCode(cmd);
+      ProcessResult executeScript = PythonInterpreterUtils.executeCode(code);
+      executeScript.setExecuteCode(code);
       response.setJson(executeScript);
     } catch (Exception e) {
       log.error(e.getMessage(), e);

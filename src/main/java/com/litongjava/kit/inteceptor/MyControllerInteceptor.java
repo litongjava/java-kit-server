@@ -1,4 +1,4 @@
-package com.litongjava.linux.inteceptor;
+package com.litongjava.kit.inteceptor;
 
 import java.lang.reflect.Method;
 

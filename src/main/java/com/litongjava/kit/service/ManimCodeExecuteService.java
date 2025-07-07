@@ -1,4 +1,4 @@
-package com.litongjava.linux.service;
+package com.litongjava.kit.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class ManimCodeExecuteService {
         found = true;
         double videoLength = NativeMedia.getVideoLength(videoFilePath);
         execute.setVideo_length(videoLength);
-        log.info("found file:{}", videoFilePath);
+        log.info("found file:{},{}", videoFilePath, videoLength);
         if (sessionPrt != null) {
           log.info("merge into:{},{}", sessionPrt, m3u8Path);
           String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, videoFilePath);
@@ -137,10 +137,9 @@ public class ManimCodeExecuteService {
         scriptPath, "CombinedScene");
     pb.environment().put("PYTHONIOENCODING", "utf-8");
 
-    ProcessResult result = ProcessUtils.execute(scriptDir, pb,120);
+    ProcessResult result = ProcessUtils.execute(scriptDir, pb, 120);
 
     return result;
   }
-
 
 }

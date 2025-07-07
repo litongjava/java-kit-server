@@ -1,7 +1,7 @@
-package com.litongjava.linux.handler;
+package com.litongjava.kit.handler;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.litongjava.linux.service.HlsService;
+import com.litongjava.kit.service.HlsService;
 import com.litongjava.model.body.RespBodyVo;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;

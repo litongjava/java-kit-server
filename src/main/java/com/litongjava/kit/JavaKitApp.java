@@ -1,12 +1,12 @@
-package com.litongjava.linux;
+package com.litongjava.kit;
 
-import com.litongjava.linux.config.AppConfig;
+import com.litongjava.kit.config.AppConfig;
 import com.litongjava.tio.boot.TioApplication;
 
-public class LinuxApp {
+public class JavaKitApp {
   public static void main(String[] args) {
     long start = System.currentTimeMillis();
-    TioApplication.run(LinuxApp.class, new AppConfig(), args);
+    TioApplication.run(JavaKitApp.class, new AppConfig(), args);
     long end = System.currentTimeMillis();
     System.out.println((end - start) + "ms");
   }

@@ -1,4 +1,4 @@
-package com.litongjava.linux.handler;
+package com.litongjava.kit.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.util.zip.Deflater;

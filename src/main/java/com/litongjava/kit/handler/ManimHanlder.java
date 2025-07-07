@@ -1,10 +1,10 @@
-package com.litongjava.linux.handler;
+package com.litongjava.kit.handler;
 
 import java.io.File;
 import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.linux.service.ManimCodeExecuteService;
+import com.litongjava.kit.service.ManimCodeExecuteService;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;

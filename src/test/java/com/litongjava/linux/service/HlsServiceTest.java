@@ -5,6 +5,7 @@ import java.io.File;
 import org.junit.Test;
 
 import com.litongjava.jfinal.aop.Aop;
+import com.litongjava.kit.service.HlsService;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.model.body.RespBodyVo;
 import com.litongjava.tio.http.common.UploadFile;

@@ -1,30 +1,25 @@
-package com.litongjava.linux.handler;
+package com.litongjava.kit.handler;
 
-import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.linux.service.ManimImageService;
+import com.litongjava.kit.utils.CmdInterpreterUtils;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
-import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.utils.commandline.ProcessResult;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimImageHandler {
-  ManimImageService manimService = Aop.get(ManimImageService.class);
+public class CmdHanlder {
 
   public HttpResponse index(HttpRequest request) {
+    String cmd = request.getBodyString();
+    log.info("cmd:{}", cmd);
     HttpResponse response = TioRequestContext.getResponse();
-    CORSUtils.enableCORS(response);
-
-    String code = request.getBodyString();
 
     try {
-      ProcessResult executeScript = manimService.executeCode(code);
-      if (executeScript != null) {
-        response.setJson(executeScript);
-      }
+      ProcessResult executeScript = CmdInterpreterUtils.executeCmd(cmd);
+      executeScript.setExecuteCode(cmd);
+      response.setJson(executeScript);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       response.setStatus(500);

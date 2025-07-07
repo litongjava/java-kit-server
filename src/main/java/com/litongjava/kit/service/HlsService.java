@@ -1,4 +1,4 @@
-package com.litongjava.linux.service;
+package com.litongjava.kit.service;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.jfinal.kit.Kv;
-import com.litongjava.linux.vo.HlsSession;
+import com.litongjava.kit.vo.HlsSession;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.model.body.RespBodyVo;
 import com.litongjava.tio.http.common.UploadFile;
