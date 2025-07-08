@@ -38,7 +38,18 @@
    cd java-kit-server
    mvn clean package -DskipTests -Pproduction -q
    ```
-3. **运行应用**  
+3. **配置API Key**
+cat secrets.txt
+```
+OPENAI_API_KEY=
+VOLC_APP_ID=
+VOLC_ACCESS_TOKEN=
+FISHAUDIO_API_KEY=
+MINIMAX_GROUP_ID=
+MINIMAX_API_KEY=
+
+```
+4. **运行应用**  
    编译完成后，运行生成的 jar 包：
    ```bash
    java -jar target/java-kit-server-1.0.0.jar
