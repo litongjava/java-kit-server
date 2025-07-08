@@ -16,6 +16,7 @@ import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
 import com.litongjava.kit.inteceptor.MyControllerInteceptor;
 import com.litongjava.llm.proxy.handler.LLMProxyHandler;
+import com.litongjava.tio.boot.admin.config.TioAdminDbConfiguration;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
 import com.litongjava.tio.boot.satoken.FixedTokenInterceptor;
@@ -23,11 +24,16 @@ import com.litongjava.tio.boot.server.TioBootServer;
 import com.litongjava.tio.http.server.intf.HttpRequestInterceptor;
 import com.litongjava.tio.http.server.router.HttpRequestRouter;
 import com.litongjava.tio.utils.environment.EnvUtils;
+import com.litongjava.uni.handler.ManimTTSHandler;
 
 public class KitAppConfig implements BootConfiguration {
 
   public void config() {
-
+    
+    // 配置数据库相关
+    new TioAdminDbConfiguration().config();
+    DbTables.init();
+    
     TioBootServer server = TioBootServer.me();
     server.setControllerInterceptor(new MyControllerInteceptor());
 
@@ -49,6 +55,9 @@ public class KitAppConfig implements BootConfiguration {
 
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
+      
+      ManimTTSHandler manimTTSHandler = new ManimTTSHandler();
+      r.add("/api/manim/tts", manimTTSHandler::index);
 
       DataHandler dataHandler = new DataHandler();
       r.add("/data/**", dataHandler::index);

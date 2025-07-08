@@ -85,6 +85,18 @@
       <version>${fastjson2.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.litongjava</groupId>
+      <artifactId>tio-boot-admin</artifactId>
+      <version>1.0.5</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <version>3.40.1.0</version>
+    </dependency>
+
     <!-- Lombok 用于简化代码 -->
     <dependency>
       <groupId>org.projectlombok</groupId>
