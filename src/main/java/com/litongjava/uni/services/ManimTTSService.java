@@ -68,7 +68,9 @@ public class ManimTTSService {
 
     // 4. 如果缓存无效或不存在，就生成新的音频并写入缓存
     long newId = SnowflakeIdUtils.id();
-    String newPath = "cache" + File.separator + newId + ".mp3";
+    String cacheAudioDir = "cache/audio";
+    new File(cacheAudioDir).mkdirs();
+    String newPath = cacheAudioDir + File.separator + newId + ".mp3";
     byte[] bodyBytes;
 
     if (TTSPlatform.volce.equals(provider)) {

@@ -14,7 +14,6 @@ import com.litongjava.kit.handler.ScriptsHandler;
 import com.litongjava.kit.handler.SpeedTestHandler;
 import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
-import com.litongjava.kit.inteceptor.MyControllerInteceptor;
 import com.litongjava.llm.proxy.handler.LLMProxyHandler;
 import com.litongjava.tio.boot.admin.config.TioAdminDbConfiguration;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
@@ -35,7 +34,6 @@ public class KitAppConfig implements BootConfiguration {
     DbTables.init();
     
     TioBootServer server = TioBootServer.me();
-    server.setControllerInterceptor(new MyControllerInteceptor());
 
     HttpRequestRouter r = server.getRequestRouter();
     if (r != null) {
