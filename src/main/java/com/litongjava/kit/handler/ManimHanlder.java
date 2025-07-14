@@ -99,6 +99,7 @@ public class ManimHanlder {
   }
 
   public HttpResponse index(HttpRequest request) {
+
     HttpResponse response = TioRequestContext.getResponse();
     CORSUtils.enableCORS(response);
 
@@ -106,6 +107,16 @@ public class ManimHanlder {
     Boolean stream = request.getBoolean("stream");
     Long session_prt = request.getLong("session_prt");
     String m3u8Path = request.getString("m3u8_path");
+
+    Integer timeout = request.getInt("timeout");
+    if (timeout == null) {
+      timeout = 1200;
+    }
+
+    Long id = request.getLong("id");
+    if (id == null) {
+      id = SnowflakeIdUtils.id();
+    }
     log.info("{},{}", session_prt, m3u8Path);
     if (stream == null) {
       stream = false;
@@ -118,7 +129,7 @@ public class ManimHanlder {
       response.setSend(false);
     }
     try {
-      ProcessResult executeScript = manimService.executeCode(code, stream, session_prt, m3u8Path, channelContext);
+      ProcessResult executeScript = manimService.executeCode(id, code, timeout, stream, session_prt, m3u8Path, channelContext);
       if (executeScript != null) {
         response.setJson(executeScript);
       }

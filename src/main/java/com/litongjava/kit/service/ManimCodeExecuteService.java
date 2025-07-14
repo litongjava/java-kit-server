@@ -22,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManimCodeExecuteService {
 
-  public ProcessResult executeCode(String code, Boolean stream, Long sessionPrt, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(Long id, String code, int timeout, Boolean stream, Long sessionPrt, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
-    long id = SnowflakeIdUtils.id();
     String taskFolder = "cache" + File.separator + id;
     code = code.replace("#(output_path)", taskFolder);
 
@@ -39,7 +38,7 @@ public class ManimCodeExecuteService {
     addFolder(taskFolder, videoFolders);
 
     // 执行脚本
-    ProcessResult execute = execute(scriptPath, taskFolder);
+    ProcessResult execute = execute(scriptPath, taskFolder, timeout);
     execute.setTaskId(id);
     String textPath = taskFolder + File.separator + "script" + File.separator + "script.txt";
     File scriptFile = new File(textPath);
@@ -113,7 +112,7 @@ public class ManimCodeExecuteService {
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p10");
   }
 
-  public static ProcessResult execute(String scriptPath, String subFolder) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, String subFolder, int timeout) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
     // 获取脚本所在目录
@@ -137,7 +136,7 @@ public class ManimCodeExecuteService {
         scriptPath, "CombinedScene");
     pb.environment().put("PYTHONIOENCODING", "utf-8");
 
-    ProcessResult result = ProcessUtils.execute(scriptDir, pb, 120);
+    ProcessResult result = ProcessUtils.execute(scriptDir, pb, timeout);
 
     return result;
   }
