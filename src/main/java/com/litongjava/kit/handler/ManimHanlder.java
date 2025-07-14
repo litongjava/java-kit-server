@@ -108,15 +108,22 @@ public class ManimHanlder {
     Long session_prt = request.getLong("session_prt");
     String m3u8Path = request.getString("m3u8_path");
 
-    Integer timeout = request.getInt("timeout");
-    if (timeout == null) {
+    String code_timeout = request.getHeader("code_timeout");
+    Integer timeout = null;
+    if (code_timeout != null) {
+      timeout = Integer.valueOf(code_timeout);
+    } else {
       timeout = 1200;
     }
 
-    Long id = request.getLong("id");
-    if (id == null) {
+    String code_id = request.getHeader("code_id");
+    Long id = null;
+    if (code_id != null) {
+      id = Long.valueOf(code_id);
+    } else {
       id = SnowflakeIdUtils.id();
     }
+
     log.info("{},{}", session_prt, m3u8Path);
     if (stream == null) {
       stream = false;
