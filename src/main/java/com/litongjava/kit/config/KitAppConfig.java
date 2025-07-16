@@ -6,7 +6,7 @@ import com.litongjava.kit.handler.DataHandler;
 import com.litongjava.kit.handler.DownloadHandler;
 import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
-import com.litongjava.kit.handler.ManimHanlder;
+import com.litongjava.kit.handler.ManimVideoHanlder;
 import com.litongjava.kit.handler.ManimImageHandler;
 import com.litongjava.kit.handler.PingHandler;
 import com.litongjava.kit.handler.PythonHanlder;
@@ -46,7 +46,7 @@ public class KitAppConfig implements BootConfiguration {
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
 
-      ManimHanlder manimHanlder = new ManimHanlder();
+      ManimVideoHanlder manimHanlder = new ManimVideoHanlder();
       r.add("/manim/start", manimHanlder::start);
       r.add("/manim/finish", manimHanlder::finish);
       r.add("/manim", manimHanlder::index);

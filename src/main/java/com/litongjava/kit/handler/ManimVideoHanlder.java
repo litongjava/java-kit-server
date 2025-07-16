@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.kit.service.ManimCodeExecuteService;
+import com.litongjava.kit.vo.ManimVideoCodeInput;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;
@@ -20,7 +21,7 @@ import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimHanlder {
+public class ManimVideoHanlder {
   ManimCodeExecuteService manimService = Aop.get(ManimCodeExecuteService.class);
 
   public HttpResponse start(HttpRequest request) {
@@ -108,7 +109,7 @@ public class ManimHanlder {
     Long session_prt = request.getLong("session_prt");
     String m3u8Path = request.getString("m3u8_path");
 
-    String code_timeout = request.getHeader("code_timeout");
+    String code_timeout = request.getHeader("code-timeout");
     Integer timeout = null;
     if (code_timeout != null) {
       timeout = Integer.valueOf(code_timeout);
@@ -116,12 +117,17 @@ public class ManimHanlder {
       timeout = 1200;
     }
 
-    String code_id = request.getHeader("code_id");
+    String code_id = request.getHeader("code-id");
     Long id = null;
     if (code_id != null) {
       id = Long.valueOf(code_id);
     } else {
       id = SnowflakeIdUtils.id();
+    }
+
+    String quality = request.getHeader("quality");
+    if (quality == null) {
+      quality = "l";
     }
 
     log.info("{},{}", session_prt, m3u8Path);
@@ -135,8 +141,9 @@ public class ManimHanlder {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
+    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(id, code, quality,timeout, stream, session_prt, m3u8Path);
     try {
-      ProcessResult executeScript = manimService.executeCode(id, code, timeout, stream, session_prt, m3u8Path, channelContext);
+      ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {
         response.setJson(executeScript);
       }

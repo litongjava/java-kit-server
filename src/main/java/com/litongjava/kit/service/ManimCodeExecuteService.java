@@ -9,21 +9,27 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.litongjava.kit.vo.ManimVideoCodeInput;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.commandline.ProcessUtils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.hutool.ResourceUtil;
-import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimCodeExecuteService {
 
-  public ProcessResult executeCode(Long id, String code, int timeout, Boolean stream, Long sessionPrt, String m3u8Path, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();
+    Long id = input.getId();
+    String code = input.getCode();
+    String quality = input.getQuality();
+    int timeout = input.getTimeout();
+    Long sessionPrt = input.getSessionPrt();
+    String m3u8Path = input.getM3u8Path();
     String taskFolder = "cache" + File.separator + id;
     code = code.replace("#(output_path)", taskFolder);
 
@@ -38,7 +44,7 @@ public class ManimCodeExecuteService {
     addFolder(taskFolder, videoFolders);
 
     // 执行脚本
-    ProcessResult execute = execute(scriptPath, taskFolder, timeout);
+    ProcessResult execute = execute(scriptPath, taskFolder, timeout, quality);
     execute.setTaskId(id);
     String textPath = taskFolder + File.separator + "script" + File.separator + "script.txt";
     File scriptFile = new File(textPath);
@@ -112,7 +118,7 @@ public class ManimCodeExecuteService {
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p10");
   }
 
-  public static ProcessResult execute(String scriptPath, String subFolder, int timeout) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, String subFolder, int timeout, String quality) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
     // 获取脚本所在目录
@@ -127,7 +133,7 @@ public class ManimCodeExecuteService {
     }
 
     //manim -ql --fps 10  --progress_bar none --verbosity WARNING --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
-    ProcessBuilder pb = new ProcessBuilder("manim", "-ql", "--fps", "10",
+    ProcessBuilder pb = new ProcessBuilder("manim", "-q" + quality, "--fps", "10",
         //
         "--progress_bar", "none", "--verbosity", "WARNING",
         //
