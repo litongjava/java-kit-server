@@ -39,7 +39,7 @@ public class ManimVideoHanlder {
 
     String tsPattern = subPath + "/segment_video_%03d.ts";
     int startNumber = 0;
-    int segmentDuration = 2; //每个分段时长（秒）
+    int segmentDuration = 2; // 每个分段时长（秒）
     long initPersistentHls = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
 
     ProcessResult processResult = new ProcessResult();
@@ -68,31 +68,43 @@ public class ManimVideoHanlder {
       m3u8Path = "." + m3u8Path;
     }
     String videos = request.getString("videos");
-    log.info("session_prt:{},m3u8Path:{}", session_prt, m3u8Path, videos);
+    log.info("session_prt:{},m3u8Path:{},videos:{}", session_prt, m3u8Path, videos);
     File file = new File(m3u8Path);
     if (file.exists()) {
-      log.info("finishPersistentHls");
+      log.info("finishPersistentHls:{}", session_prt);
       NativeMedia.finishPersistentHls(session_prt, m3u8Path);
     } else {
-      log.info("freeHlsSession");
+      log.info("freeHlsSession:{}", session_prt);
       NativeMedia.freeHlsSession(session_prt);
     }
 
     if (videos != null) {
       String subPath = FilenameUtils.getSubPath(m3u8Path);
-      String outputPath = subPath + "/main.mp4";
+      String outputMp4Path = subPath + "/main.mp4";
       String[] split = videos.split(",");
       String[] mp4FileList = new String[split.length];
+      String[] wavFileList = new String[split.length];
       for (int i = 0; i < split.length; i++) {
-        String string = "." + split[i].replace(".m3u8", ".mp4");
-        mp4FileList[i] = string;
+        mp4FileList[i] = "." + split[i].replace(".m3u8", ".mp4");
+        wavFileList[i] = "." + split[i].replace(".m3u8", ".wav");
       }
       log.info("merge:{}", JsonUtils.toJson(mp4FileList));
-      boolean merged = NativeMedia.merge(mp4FileList, outputPath);
+      boolean merged = NativeMedia.merge(mp4FileList, outputMp4Path);
       log.info("merged:{}", merged);
       if (merged) {
-        double videoLength = NativeMedia.getVideoLength(outputPath);
+        double videoLength = NativeMedia.getVideoLength(outputMp4Path);
+        log.info("video_length:{} {}", outputMp4Path, videoLength);
         processResult.setVideo_length(videoLength);
+        double delta = videoLength - 120d;
+        String mp3Path = null;
+        if (delta > 0) {
+          double insertion_silence_duration = delta / 100;
+          mp3Path = NativeMedia.toMp3ForSilence(outputMp4Path, insertion_silence_duration);
+        } else {
+          mp3Path = NativeMedia.toMp3(outputMp4Path);
+        }
+        processResult.setAudio(mp3Path);
+        log.info("mp3:{}", mp3Path);
       }
     }
 
@@ -141,7 +153,8 @@ public class ManimVideoHanlder {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
-    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(id, code, quality,timeout, stream, session_prt, m3u8Path);
+    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(id, code, quality, timeout, stream, session_prt,
+        m3u8Path);
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {

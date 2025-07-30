@@ -28,8 +28,8 @@ public class DbTables {
     int size = tables.size();
     if (size < 1) {
       URL url = ResourceUtil.getResource("sql/" + userTableName + ".sql");
-      StringBuilder stringBuilder = FileUtil.readURLAsString(url);
-      int update = Db.update(stringBuilder.toString());
+      String sql2 = FileUtil.readString(url);
+      int update = Db.update(sql2);
       log.info("created:{},{}", userTableName, update);
       return true;
     }

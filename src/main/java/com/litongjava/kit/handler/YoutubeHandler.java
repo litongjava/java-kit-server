@@ -1,10 +1,12 @@
 package com.litongjava.kit.handler;
 
 import java.io.File;
+import java.io.IOException;
 
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
+import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.http.ContentTypeUtils;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.youtube.YouTubeIdUtil;
@@ -15,13 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class YoutubeHandler {
 
-  public HttpResponse downloadMp3(HttpRequest request) {
+  public HttpResponse downloadMp3(HttpRequest request) throws IOException, InterruptedException {
     HttpResponse httpResponse = TioRequestContext.getResponse();
 
     String url = request.getParam("url");
     log.info("download:{}", url);
     String id = YouTubeIdUtil.extractVideoId(url);
-    File file = YtDlpUtils.downloadMp3(id, true);
+    ProcessResult processResult = YtDlpUtils.downloadMp3(id, true);
+    File file = processResult.getFile();
 
     if (file.exists()) {
       String downloadFilename = file.getName();
