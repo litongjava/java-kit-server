@@ -20,7 +20,7 @@ import com.litongjava.tio.utils.hutool.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimCodeExecuteService {
+public class ManimVideoCodeExecuteService {
 
   public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext) throws IOException, InterruptedException {
     new File("cache").mkdirs();

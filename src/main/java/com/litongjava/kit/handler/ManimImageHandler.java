@@ -1,7 +1,7 @@
 package com.litongjava.kit.handler;
 
 import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.kit.service.ManimImageService;
+import com.litongjava.kit.service.ManimImageCodeExecuteService;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimImageHandler {
-  ManimImageService manimService = Aop.get(ManimImageService.class);
+  ManimImageCodeExecuteService manimService = Aop.get(ManimImageCodeExecuteService.class);
 
   public HttpResponse index(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();

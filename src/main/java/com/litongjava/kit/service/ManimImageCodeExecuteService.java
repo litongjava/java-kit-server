@@ -12,7 +12,7 @@ import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimImageService {
+public class ManimImageCodeExecuteService {
 
   public ProcessResult executeCode(String code) throws IOException, InterruptedException {
     long id = SnowflakeIdUtils.id();

@@ -34,6 +34,12 @@
 
     <dependency>
       <groupId>com.litongjava</groupId>
+      <artifactId>java-uni-ai-server</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.litongjava</groupId>
       <artifactId>java-native-media</artifactId>
       <version>1.0.0</version>
     </dependency>

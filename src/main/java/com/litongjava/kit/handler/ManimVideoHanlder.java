@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
-import com.litongjava.kit.service.ManimCodeExecuteService;
+import com.litongjava.kit.service.ManimVideoCodeExecuteService;
 import com.litongjava.kit.vo.ManimVideoCodeInput;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimVideoHanlder {
-  ManimCodeExecuteService manimService = Aop.get(ManimCodeExecuteService.class);
+  ManimVideoCodeExecuteService manimService = Aop.get(ManimVideoCodeExecuteService.class);
 
   public HttpResponse start(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();

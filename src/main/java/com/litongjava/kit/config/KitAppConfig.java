@@ -28,7 +28,7 @@ import com.litongjava.tio.boot.server.TioBootServer;
 import com.litongjava.tio.http.server.intf.HttpRequestInterceptor;
 import com.litongjava.tio.http.server.router.HttpRequestRouter;
 import com.litongjava.tio.utils.environment.EnvUtils;
-import com.litongjava.uni.handler.ManimTTSHandler;
+import com.litongjava.uni.config.UniAiAppConfig;
 
 public class KitAppConfig implements BootConfiguration {
 
@@ -36,7 +36,8 @@ public class KitAppConfig implements BootConfiguration {
     
     // 配置数据库相关
     new TioAdminDbConfiguration().config();
-    DbTables.init();
+    
+    new UniAiAppConfig().config();
     
     TioBootServer server = TioBootServer.me();
 
@@ -59,9 +60,6 @@ public class KitAppConfig implements BootConfiguration {
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
       
-      ManimTTSHandler manimTTSHandler = new ManimTTSHandler();
-      r.add("/api/manim/tts", manimTTSHandler::index);
-
       DataHandler dataHandler = new DataHandler();
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
