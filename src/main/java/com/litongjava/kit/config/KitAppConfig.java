@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.litongjava.context.BootConfiguration;
 import com.litongjava.kit.handler.CmdHanlder;
-import com.litongjava.kit.handler.DataHandler;
-import com.litongjava.kit.handler.DownloadHandler;
 import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
@@ -20,6 +18,7 @@ import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
 import com.litongjava.llm.proxy.handler.LLMProxyHandler;
 import com.litongjava.tio.boot.admin.config.TioAdminDbConfiguration;
+import com.litongjava.tio.boot.http.handler.common.HttpFileDataHandler;
 import com.litongjava.tio.boot.http.handler.controller.TioBootHttpControllerRouter;
 import com.litongjava.tio.boot.http.interceptor.HttpInteceptorConfigure;
 import com.litongjava.tio.boot.http.interceptor.HttpInterceptorModel;
@@ -60,7 +59,7 @@ public class KitAppConfig implements BootConfiguration {
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
       
-      DataHandler dataHandler = new DataHandler();
+      HttpFileDataHandler dataHandler = new HttpFileDataHandler();
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
@@ -76,9 +75,6 @@ public class KitAppConfig implements BootConfiguration {
 
       YoutubeHandler youtubeHandler = new YoutubeHandler();
       r.add("/youtube/download/mp3", youtubeHandler::downloadMp3);
-
-      DownloadHandler downloadHandler = new DownloadHandler();
-      r.add("/download", downloadHandler::donwload);
 
       SpeedTestHandler speedTestHandler = new SpeedTestHandler();
       r.add("/speed/test", speedTestHandler::output);
