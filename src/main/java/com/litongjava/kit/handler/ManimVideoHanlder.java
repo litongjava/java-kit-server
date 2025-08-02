@@ -126,7 +126,7 @@ public class ManimVideoHanlder {
     if (code_timeout != null) {
       timeout = Integer.valueOf(code_timeout);
     } else {
-      timeout = 1200;
+      timeout = 600;
     }
 
     String code_id = request.getHeader("code-id");

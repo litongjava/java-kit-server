@@ -2,11 +2,14 @@ package com.litongjava.kit.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.hutool.FileUtil;
+import com.litongjava.tio.utils.hutool.ResourceUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,15 +53,23 @@ public class ManimImageCodeExecuteService {
   public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
-    ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
-    pb.environment().put("PYTHONIOENCODING", "utf-8");
-
+    
     // 获取脚本所在目录
     File scriptFile = new File(scriptPath);
     File scriptDir = scriptFile.getParentFile();
     if (scriptDir != null && !scriptDir.exists()) {
       scriptDir.mkdirs();
     }
+    try (InputStream in = ResourceUtil.getResourceAsStream("python/manim_utils.py")) {
+      if (in == null) {
+        throw new IOException("Resource not found: python/manim_utils.py");
+      }
+      File manimUtilsFile = new File(scriptDir, "manim_utils.py");
+      Files.copy(in, manimUtilsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+    ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
+    pb.environment().put("PYTHONIOENCODING", "utf-8");
+
 
     // 定义日志文件路径，存放在与 scriptPath 相同的目录
     File stdoutFile = new File(scriptDir, "stdout.log");
