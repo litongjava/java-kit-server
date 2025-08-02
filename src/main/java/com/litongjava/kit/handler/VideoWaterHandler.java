@@ -13,7 +13,6 @@ import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.http.server.util.Resps;
 import com.litongjava.tio.utils.crypto.Md5Utils;
 import com.litongjava.tio.utils.http.ContentTypeUtils;
-import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.hutool.StrUtil;
 
@@ -103,13 +102,11 @@ public class VideoWaterHandler {
         response.setStatus(416);
       }
     } else {
-      // 如果没有 Range 头，则直接返回整个文件
-      byte[] readBytes = FileUtil.readBytes(file);
       response.setHeader("Accept-Ranges", "bytes");
       if (StrUtil.isNotBlank(filename)) {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
       }
-      Resps.bytesWithContentType(response, readBytes, contentType);
+      response.setFileBody(file); 
     }
     // 视频文件（如 mp4）本身已经是压缩格式，再进行 gzip 压缩可能会破坏文件格式，导致浏览器无法正确解码。
     response.setHasGzipped(true);
