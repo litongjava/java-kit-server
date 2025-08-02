@@ -16,7 +16,7 @@ import com.litongjava.kit.handler.SpeedTestHandler;
 import com.litongjava.kit.handler.TestController;
 import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
-import com.litongjava.llm.proxy.handler.LLMProxyHandler;
+import com.litongjava.llm.proxy.config.LLMProxyAppConfig;
 import com.litongjava.tio.boot.admin.config.TioAdminDbConfiguration;
 import com.litongjava.tio.boot.http.handler.common.HttpFileDataHandler;
 import com.litongjava.tio.boot.http.handler.controller.TioBootHttpControllerRouter;
@@ -32,12 +32,13 @@ import com.litongjava.uni.config.UniAiAppConfig;
 public class KitAppConfig implements BootConfiguration {
 
   public void config() {
-    
+
     // 配置数据库相关
     new TioAdminDbConfiguration().config();
-    
+
     new UniAiAppConfig().config();
-    
+    new LLMProxyAppConfig().config(); 
+
     TioBootServer server = TioBootServer.me();
 
     HttpRequestRouter r = server.getRequestRouter();
@@ -46,7 +47,7 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/ping", pingHanlder::ping);
 
       CmdHanlder cmdHanlder = new CmdHanlder();
-      r.add("/cmd", cmdHanlder::index);
+      r.add("/cmd", cmdHanlder::index );
 
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
@@ -58,7 +59,7 @@ public class KitAppConfig implements BootConfiguration {
 
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
-      
+
       HttpFileDataHandler dataHandler = new HttpFileDataHandler();
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
@@ -82,12 +83,6 @@ public class KitAppConfig implements BootConfiguration {
       GzipBombTestHandler gzipBombTestHandler = new GzipBombTestHandler();
       r.add("/gzip/bomb/test", gzipBombTestHandler::output);
 
-      LLMProxyHandler LLMProxyHandler = new LLMProxyHandler();
-      r.add("/openai/v1/chat/completions", LLMProxyHandler::completions);
-      r.add("/anthropic/v1/messages", LLMProxyHandler::completions);
-      r.add("/google/v1beta/models/*", LLMProxyHandler::completions);
-      
-      
     }
 
     TioBootHttpControllerRouter controllerRouter = TioBootServer.me().getControllerRouter();
@@ -97,7 +92,7 @@ public class KitAppConfig implements BootConfiguration {
     List<Class<?>> scannedClasses = new ArrayList<>();
     scannedClasses.add(TestController.class);
     controllerRouter.addControllers(scannedClasses);
-    
+
     String authToken = EnvUtils.get("app.auth.token");
 
     // tokenInterceptor
@@ -112,15 +107,13 @@ public class KitAppConfig implements BootConfiguration {
         //
         "/hls/**", "/data/**", "/scripts/**", "/video/download/water", "/speed/test", "/gzip/bomb/test",
         //
-        "openai/**", "/anthropic/**", "/google/**","/test/**");
+        "openai/**", "/anthropic/**", "/google/**", "/test/**");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
 
     // 将拦截器配置添加到 Tio 服务器,为了提高性能,默认serverInteceptorConfigure为null,必须添加
     server.setHttpInteceptorConfigure(serverInteceptorConfigure);
-    
-    
 
   }
 }
