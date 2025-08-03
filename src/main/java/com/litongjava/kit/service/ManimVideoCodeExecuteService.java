@@ -22,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManimVideoCodeExecuteService {
 
-  public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext)
+      throws IOException, InterruptedException {
     new File("cache").mkdirs();
     Long id = input.getId();
     String code = input.getCode();
@@ -118,7 +119,8 @@ public class ManimVideoCodeExecuteService {
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p10");
   }
 
-  public static ProcessResult execute(String scriptPath, String subFolder, int timeout, String quality) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, String subFolder, int timeout, String quality)
+      throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
     // 获取脚本所在目录
@@ -132,7 +134,13 @@ public class ManimVideoCodeExecuteService {
       Files.copy(in, manimUtilsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
-    //manim -ql --fps 10  --progress_bar none --verbosity WARNING --media_dir cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene 
+    // manim -ql --fps 10 --progress_bar none --verbosity WARNING --media_dir
+    // cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene
+    String cmd = "manim -qh --fps 10  --progress_bar none --verbosity WARNING --media_dir %s --output_file CombinedScene %s CombinedScene";
+    cmd = String.format(cmd, "../../" + subFolder, "script.py");
+    File runSh = new File(scriptDir, "run.sh");
+    FileUtil.writeString(cmd, runSh);
+
     ProcessBuilder pb = new ProcessBuilder("manim", "-q" + quality, "--fps", "10",
         //
         "--progress_bar", "none", "--verbosity", "WARNING",

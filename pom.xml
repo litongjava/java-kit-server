@@ -131,6 +131,37 @@
       <artifactId>sherpa-onnx-java-api</artifactId>
       <version>1.0.0</version>
     </dependency>
+
+    <!-- Batik 核心依赖 -->
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-transcoder</artifactId>
+      <version>1.14</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-dom</artifactId>
+      <version>1.14</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-awt-util</artifactId>
+      <version>1.14</version>
+    </dependency>
+
+    <!-- 关键：添加 PNG 编码器支持 -->
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-codec</artifactId>
+      <version>1.14</version>
+    </dependency>
+
+    <!-- 可选：添加 XML 外部实体防护 -->
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-constants</artifactId>
+      <version>1.14</version>
+    </dependency>
   </dependencies>
 
   <profiles>
