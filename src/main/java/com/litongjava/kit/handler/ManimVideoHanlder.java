@@ -126,7 +126,7 @@ public class ManimVideoHanlder {
     if (code_timeout != null) {
       timeout = Integer.valueOf(code_timeout);
     } else {
-      timeout = 600;
+      timeout = 590;
     }
 
     String code_id = request.getHeader("code-id");
@@ -142,7 +142,8 @@ public class ManimVideoHanlder {
       quality = "l";
     }
 
-    log.info("{},{}", session_prt, m3u8Path);
+    log.info("session_prt={},m3u8Path={},code_id={},code_timeout={},quality={}", session_prt, m3u8Path, code_id,
+        code_timeout, quality);
     if (stream == null) {
       stream = false;
     }
