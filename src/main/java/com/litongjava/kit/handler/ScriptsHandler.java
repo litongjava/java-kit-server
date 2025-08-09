@@ -30,7 +30,7 @@ public class ScriptsHandler {
 
     long fileLength = file.length();
     // 检查是否存在 Range 头信息
-    String range = request.getHeader("Range");
+    String range = request.getHeader("range");
     if (range != null && range.startsWith("bytes=")) {
       // 例如 Range: bytes=0-1023
       String rangeValue = range.substring("bytes=".length());
@@ -70,7 +70,7 @@ public class ScriptsHandler {
       Resps.bytesWithContentType(response, readBytes, contentType);
     }
     //视频文件（如 mp4）本身已经是压缩格式，再进行 gzip 压缩可能会破坏文件格式，导致浏览器无法正确解码。
-    response.setHasGzipped(true);
+    response.setSkipGzipped(true);
     return response;
   }
 }
