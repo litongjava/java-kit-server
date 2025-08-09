@@ -8,7 +8,6 @@ import com.litongjava.media.utils.VideoWaterUtils;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
-import com.litongjava.tio.http.common.ResponseHeaderKey;
 import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.http.server.util.Resps;
 import com.litongjava.tio.utils.crypto.Md5Utils;
@@ -70,7 +69,7 @@ public class VideoWaterHandler {
 
     long fileLength = file.length();
     // 检查是否存在 Range 头信息
-    String range = request.getHeader("Range");
+    String range = request.getHeader("range");
     if (range != null && range.startsWith("bytes=")) {
       String rangeValue = range.substring("bytes=".length());
       String[] parts = rangeValue.split("-");
@@ -92,7 +91,6 @@ public class VideoWaterHandler {
         response.setStatus(206); // Partial Content
         response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
         response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader(ResponseHeaderKey.Content_Length, String.valueOf(contentLength));
         // 如果传入了 filename，则在响应头中指定下载文件名
         if (StrUtil.isNotBlank(filename)) {
           response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
@@ -109,7 +107,7 @@ public class VideoWaterHandler {
       response.setFileBody(file); 
     }
     // 视频文件（如 mp4）本身已经是压缩格式，再进行 gzip 压缩可能会破坏文件格式，导致浏览器无法正确解码。
-    response.setHasGzipped(true);
+    response.setSkipGzipped(true);
     return response;
   }
 }
