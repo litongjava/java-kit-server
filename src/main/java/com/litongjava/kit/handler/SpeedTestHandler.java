@@ -27,7 +27,7 @@ public class SpeedTestHandler {
     httpResponse.setContentType("application/octet-stream");
     httpResponse.header("Content-Length", String.valueOf(totalBytes));
     //告诉编码器,已经设置了响应头的Content-Length,不要再计算
-    httpResponse.setAddContentLength(false);
+    httpResponse.setSkipAddContentLength(false);
     Tio.bSend(request.channelContext, httpResponse);
 
     long chunkBytes = 1 * 1024L * 1024L;

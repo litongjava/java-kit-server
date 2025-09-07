@@ -37,7 +37,7 @@ public class KitAppConfig implements BootConfiguration {
     new TioAdminDbConfiguration().config();
 
     new UniAiAppConfig().config();
-    new LLMProxyAppConfig().config(); 
+    new LLMProxyAppConfig().config();
 
     TioBootServer server = TioBootServer.me();
 
@@ -47,7 +47,7 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/ping", pingHanlder::ping);
 
       CmdHanlder cmdHanlder = new CmdHanlder();
-      r.add("/cmd", cmdHanlder::index );
+      r.add("/cmd", cmdHanlder::index);
 
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
@@ -103,11 +103,15 @@ public class KitAppConfig implements BootConfiguration {
     model.addBlockUrl("/**"); // 拦截所有路由
 
     // 设置例外路由 index
-    model.addAllowUrls("/", "/ping", "/download", "/youtube/**", "/media/**", "/cache/**",
+    model.addAllowUrls("/", "/ping", "/download", "/youtube/**",
         //
-        "/hls/**", "/data/**", "/scripts/**", "/video/download/water", "/speed/test", "/gzip/bomb/test",
+        "/media/**", "/cache/**", "/hls/**", "/data/**", "/scripts/**", "/video/download/water",
         //
-        "openai/**", "/anthropic/**", "/google/**", "/test/**","/tts");
+        "/speed/test", "/gzip/bomb/test",
+        //
+        "openai/**", "/anthropic/**", "/google/**", "/openrouter/**", "/cerebras/**",
+        //
+        "/test/**", "/tts");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);
