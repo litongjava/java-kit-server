@@ -106,7 +106,7 @@ public class KitAppConfig implements BootConfiguration {
     // 设置例外路由 index
     model.addAllowUrls("/", "/ping", "/download", "/youtube/**",
         //
-        "/media/**", "/cache/**", "/hls/**", "/data/**", "/scripts/**", "/video/download/water",
+        "/media/**", "/cache/**", "/hls/**", "/data/**", "/scripts/**", "/video/exists", "/video/download/water",
         //
         "/speed/test", "/gzip/bomb/test",
         //
