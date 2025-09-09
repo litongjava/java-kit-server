@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import com.litongjava.media.utils.VideoWaterUtils;
+import com.litongjava.model.body.RespBodyVo;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -104,10 +105,27 @@ public class VideoWaterHandler {
       if (StrUtil.isNotBlank(filename)) {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
       }
-      response.setFileBody(file); 
+      response.setFileBody(file);
     }
     // 视频文件（如 mp4）本身已经是压缩格式，再进行 gzip 压缩可能会破坏文件格式，导致浏览器无法正确解码。
     response.setSkipGzipped(true);
     return response;
+  }
+
+  public HttpResponse exists(HttpRequest request) {
+    HttpResponse response = TioRequestContext.getResponse();
+    CORSUtils.enableCORS(response);
+    String path = request.getString("path");
+
+    if (StrUtil.isBlank(path)) {
+      return response.body("path can not be empty");
+    }
+
+    String targetFile = "." + path;
+    File file = new File(targetFile);
+    if (!file.exists()) {
+      return response.body(RespBodyVo.fail("file is not exists"));
+    }
+    return response.body(RespBodyVo.ok());
   }
 }

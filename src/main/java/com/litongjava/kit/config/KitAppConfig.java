@@ -73,6 +73,7 @@ public class KitAppConfig implements BootConfiguration {
 
       VideoWaterHandler videoWaterHandler = new VideoWaterHandler();
       r.add("/video/download/water", videoWaterHandler::index);
+      r.add("/video/exists", videoWaterHandler::exists);
 
       YoutubeHandler youtubeHandler = new YoutubeHandler();
       r.add("/youtube/download/mp3", youtubeHandler::downloadMp3);
