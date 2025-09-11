@@ -60,11 +60,11 @@ public class ManimImageCodeExecuteService {
     if (scriptDir != null && !scriptDir.exists()) {
       scriptDir.mkdirs();
     }
-    try (InputStream in = ResourceUtil.getResourceAsStream("python/manim_utils.py")) {
+    try (InputStream in = ResourceUtil.getResourceAsStream("python/manim_toolkit.py")) {
       if (in == null) {
-        throw new IOException("Resource not found: python/manim_utils.py");
+        throw new IOException("Resource not found: python/manim_toolkit.py");
       }
-      File manimUtilsFile = new File(scriptDir, "manim_utils.py");
+      File manimUtilsFile = new File(scriptDir, "manim_toolkit.py");
       Files.copy(in, manimUtilsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
     ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
