@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Accessors(chain=true)
+@Accessors(chain = true)
 public class ManimVideoCodeInput {
   private Long id;
   private String code;

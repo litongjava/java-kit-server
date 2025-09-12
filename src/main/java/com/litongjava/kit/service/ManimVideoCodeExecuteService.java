@@ -16,6 +16,7 @@ import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.commandline.ProcessUtils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.hutool.ResourceUtil;
+import com.litongjava.tio.utils.path.WorkDirUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,20 +25,20 @@ public class ManimVideoCodeExecuteService {
 
   public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext)
       throws IOException, InterruptedException {
-    new File("cache").mkdirs();
+    String cacheDir = WorkDirUtils.workingCacheDir();
     Long id = input.getId();
     String code = input.getCode();
     String quality = input.getQuality();
     int timeout = input.getTimeout();
     Long sessionPrt = input.getSessionPrt();
     String m3u8Path = input.getM3u8Path();
-    String taskFolder = "cache" + File.separator + id;
+    String taskFolder = cacheDir + File.separator + id;
     code = code.replace("#(output_path)", taskFolder);
 
-    String folder = "scripts" + File.separator + id;
-    File fileFolder = new File(folder);
-    if (!fileFolder.exists()) {
-      fileFolder.mkdirs();
+    String folder = WorkDirUtils.workingScriptsDir() + File.separator + id;
+    File scriptDir = new File(folder);
+    if (!scriptDir.exists()) {
+      scriptDir.mkdirs();
     }
     String scriptPath = folder + File.separator + "script.py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
@@ -47,53 +48,77 @@ public class ManimVideoCodeExecuteService {
     // 执行脚本
     ProcessResult execute = execute(scriptPath, taskFolder, timeout, quality);
     execute.setTaskId(id);
+    // 读取字幕
     String textPath = taskFolder + File.separator + "script" + File.separator + "script.txt";
     File scriptFile = new File(textPath);
     if (scriptFile.exists()) {
       String text = FileUtil.readString(scriptFile);
       execute.setText(text);
     }
-    boolean found = false;
-    for (String videoFolder : videoFolders) {
-      String videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
-      File file = new File(videoFilePath);
-      if (file.exists()) {
-        found = true;
-        double videoLength = NativeMedia.getVideoLength(videoFilePath);
-        execute.setVideo_length(videoLength);
-        log.info("found file:{},{}", videoFilePath, videoLength);
-        if (sessionPrt != null) {
-          log.info("merge into:{},{}", sessionPrt, m3u8Path);
-          String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, videoFilePath);
-          log.info("merge result:{}", appendVideoSegmentToHls);
-          String videoUrl = "/" + videoFilePath;
-          execute.setOutput(videoUrl);
-          execute.setVideo(videoUrl);
-        } else {
-          log.info("skip merge to hls:{}", videoFilePath);
+    boolean success = execute.getExitCode() == 0;
 
-          String subPath = "./data/hls/" + id + "/";
-          String name = "main";
-
-          String relPath = subPath + name + ".mp4";
-          File relPathFile = new File(relPath);
-          relPathFile.getParentFile().mkdirs();
-
-          Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-          String hlsPath = subPath + name + ".m3u8";
-          log.info("to hls:{}", hlsPath);
-          NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
-          String videoUrl = hlsPath.replace("./", "/");
-          execute.setOutput(videoUrl);
-          execute.setVideo(videoUrl);
+    if (success) {
+      boolean found = false;
+      for (String videoFolder : videoFolders) {
+        File videoDir = new File(videoFolder);
+        if (!videoDir.exists()) {
+          continue;
         }
-        break;
-      }
-    }
-    if (!found) {
-      log.error("not found video in :{}", taskFolder);
-    }
+        found = true;
+        File[] mp4Files = videoDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp4"));
 
+        String videoFilePath = null;
+        if (mp4Files.length > 1) {
+          String[] mp4FilePaths = new String[mp4Files.length];
+          for (int i = 0; i < mp4Files.length; i++) {
+            mp4FilePaths[i] = mp4Files[i].getAbsolutePath();
+          }
+          videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
+          NativeMedia.merge(mp4FilePaths, videoFilePath);
+        } else {
+          // 必须返回绝对路径
+          videoFilePath = videoFolder + File.separator + mp4Files[0].getName();
+        }
+
+        File file = new File(videoFilePath);
+        if (file.exists()) {
+          double videoLength = NativeMedia.getVideoLength(videoFilePath);
+          execute.setVideo_length(videoLength);
+          log.info("found file:{},{}", videoFilePath, videoLength);
+          if (sessionPrt != null) {
+            log.info("merge into:{},{}", sessionPrt, m3u8Path);
+            String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, videoFilePath);
+            log.info("merge result:{}", appendVideoSegmentToHls);
+            String videoUrl = "/" + videoFilePath;
+            execute.setOutput(videoUrl);
+            execute.setVideo(videoUrl);
+          } else {
+            log.info("skip merge to hls:{}", videoFilePath);
+
+            String subPath = "./data/hls/" + id + "/";
+            String name = "main";
+
+            String relPath = subPath + name + ".mp4";
+            File relPathFile = new File(relPath);
+            relPathFile.getParentFile().mkdirs();
+
+            Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            String hlsPath = subPath + name + ".m3u8";
+            log.info("to hls:{}", hlsPath);
+            NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
+            String videoUrl = hlsPath.replace("./", "/");
+            execute.setOutput(videoUrl);
+            execute.setVideo(videoUrl);
+          }
+          break;
+        }
+      }
+      if (!found) {
+        log.error("not found video:{}", taskFolder);
+      }
+    } else {
+      log.error("Failed to run task:{}", taskFolder);
+    }
     return execute;
   }
 
@@ -119,7 +144,7 @@ public class ManimVideoCodeExecuteService {
     videoFolders.add(subFolder + File.separator + "videos" + File.separator + "script" + File.separator + "1080p10");
   }
 
-  public static ProcessResult execute(String scriptPath, String subFolder, int timeout, String quality)
+  public static ProcessResult execute(String scriptPath, String mediaDir, int timeout, String quality)
       throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
@@ -136,8 +161,8 @@ public class ManimVideoCodeExecuteService {
 
     // manim -ql --fps 10 --progress_bar none --verbosity WARNING --media_dir
     // cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene
-    String cmd = "manim -qh --fps 10  --progress_bar none --verbosity WARNING --media_dir %s --output_file CombinedScene %s CombinedScene";
-    cmd = String.format(cmd, "../../" + subFolder, "script.py");
+    String cmd = "manim -qh --fps 10  --progress_bar none --verbosity WARNING --media_dir %s %s -a";
+    cmd = String.format(cmd, mediaDir, "script.py");
     File runSh = new File(scriptDir, "run.sh");
     FileUtil.writeString(cmd, runSh);
 
@@ -145,10 +170,13 @@ public class ManimVideoCodeExecuteService {
         //
         "--progress_bar", "none", "--verbosity", "WARNING",
         //
-        "--media_dir", subFolder, "--output_file", "CombinedScene",
+        "--media_dir", mediaDir,
         //
-        scriptPath, "CombinedScene");
+        scriptPath, "-a");
+
+    String workingDir = WorkDirUtils.getWorkingDir();
     pb.environment().put("PYTHONIOENCODING", "utf-8");
+    pb.environment().put("PYTHONPATH", workingDir);
 
     ProcessResult result = ProcessUtils.execute(scriptDir, pb, timeout);
 
