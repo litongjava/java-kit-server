@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import com.litongjava.kit.vo.ManimVideoCodeInput;
@@ -69,6 +71,7 @@ public class ManimVideoCodeExecuteService {
 
         String videoFilePath = null;
         if (mp4Files.length > 1) {
+          Arrays.sort(mp4Files, Comparator.comparing(File::getName));
           String[] mp4FilePaths = new String[mp4Files.length];
           for (int i = 0; i < mp4Files.length; i++) {
             mp4FilePaths[i] = mp4Files[i].getAbsolutePath();
