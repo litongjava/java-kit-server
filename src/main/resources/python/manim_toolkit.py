@@ -98,7 +98,7 @@ def get_cache_filename(text: str) -> str:
 @contextmanager
 def custom_voiceover_tts(text: str,
                          token: str = "123456",
-                         base_url: str = "http://13.216.69.13/api/manim/tts"):
+                         base_url: str = "http://127.0.0.1/api/manim/tts"):
     script_path = os.path.join(SCRIPT_DIR, "script.txt")
     try:
         with open(script_path, "a", encoding="utf-8") as log_file:

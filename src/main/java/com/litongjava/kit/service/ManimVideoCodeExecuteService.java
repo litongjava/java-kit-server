@@ -48,18 +48,23 @@ public class ManimVideoCodeExecuteService {
     addFolder(taskFolder, videoFolders);
 
     // 执行脚本
-    ProcessResult execute = execute(scriptPath, taskFolder, timeout, quality);
-    execute.setTaskId(id);
+    ProcessResult result = execute(scriptPath, taskFolder, timeout, quality);
+    result.setTaskId(id);
     // 读取字幕
     String textPath = taskFolder + File.separator + "script" + File.separator + "script.txt";
     File scriptFile = new File(textPath);
     if (scriptFile.exists()) {
       String text = FileUtil.readString(scriptFile);
-      execute.setText(text);
+      result.setText(text);
     }
-    boolean success = execute.getExitCode() == 0;
+    boolean success = result.getExitCode() == 0;
 
     if (success) {
+      String dataHlsVideoDir = "./data" + "/" + "hls" + "/" + id;
+      File file = new File(dataHlsVideoDir);
+      if (!file.exists()) {
+        file.mkdirs();
+      }
       boolean found = false;
       for (String videoFolder : videoFolders) {
         File videoDir = new File(videoFolder);
@@ -73,9 +78,19 @@ public class ManimVideoCodeExecuteService {
         if (mp4Files.length > 1) {
           Arrays.sort(mp4Files, Comparator.comparing(File::getName));
           String[] mp4FilePaths = new String[mp4Files.length];
+          List<String> imagesFilePaths = new ArrayList<>(mp4Files.length);
+
           for (int i = 0; i < mp4Files.length; i++) {
-            mp4FilePaths[i] = mp4Files[i].getAbsolutePath();
+            File mp4File = mp4Files[i];
+            String mp4Path = mp4File.getAbsolutePath();
+            String outputJpgPath = dataHlsVideoDir + "/" + mp4File.getName() + ".jpg";
+            int exitCode = NativeMedia.saveLastFrame(mp4Path, outputJpgPath);
+            if (exitCode == 0) {
+              imagesFilePaths.add(outputJpgPath.replace("./", "/"));
+            }
+            mp4FilePaths[i] = mp4Path;
           }
+          result.setImages(imagesFilePaths);
           videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
           NativeMedia.merge(mp4FilePaths, videoFilePath);
         } else {
@@ -83,35 +98,40 @@ public class ManimVideoCodeExecuteService {
           videoFilePath = videoFolder + File.separator + mp4Files[0].getName();
         }
 
-        File file = new File(videoFilePath);
+        file = new File(videoFilePath);
         if (file.exists()) {
           double videoLength = NativeMedia.getVideoLength(videoFilePath);
-          execute.setVideo_length(videoLength);
+          result.setVideo_length(videoLength);
           log.info("found file:{},{}", videoFilePath, videoLength);
           if (sessionPrt != null) {
+            String outputJpgPath = dataHlsVideoDir + "/" + file.getName() + ".jpg";
+            int exitCode = NativeMedia.saveLastFrame(videoFilePath, outputJpgPath);
+            if (exitCode == 0) {
+              result.setImage(outputJpgPath.replace("./", "/"));
+            }
+
             log.info("merge into:{},{}", sessionPrt, m3u8Path);
             String appendVideoSegmentToHls = NativeMedia.appendVideoSegmentToHls(sessionPrt, videoFilePath);
             log.info("merge result:{}", appendVideoSegmentToHls);
             String videoUrl = "/" + videoFilePath;
-            execute.setOutput(videoUrl);
-            execute.setVideo(videoUrl);
+            result.setOutput(videoUrl);
+            result.setVideo(videoUrl);
           } else {
             log.info("skip merge to hls:{}", videoFilePath);
 
-            String subPath = "./data/hls/" + id + "/";
             String name = "main";
 
-            String relPath = subPath + name + ".mp4";
+            String relPath = dataHlsVideoDir + File.separator + name + ".mp4";
             File relPathFile = new File(relPath);
             relPathFile.getParentFile().mkdirs();
 
             Files.copy(file.toPath(), relPathFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            String hlsPath = subPath + name + ".m3u8";
-            log.info("to hls:{}", hlsPath);
-            NativeMedia.splitVideoToHLS(hlsPath, relPath, subPath + "/" + name + "_%03d.ts", 10);
-            String videoUrl = hlsPath.replace("./", "/");
-            execute.setOutput(videoUrl);
-            execute.setVideo(videoUrl);
+            String dataM3u8Path = dataHlsVideoDir + "/" + name + ".m3u8";
+            log.info("to hls:{}", dataM3u8Path);
+            NativeMedia.splitVideoToHLS(dataM3u8Path, relPath, dataHlsVideoDir + "/" + name + "_%03d.ts", 10);
+            String videoUrl = dataM3u8Path.replace("./", "/");
+            result.setOutput(videoUrl);
+            result.setVideo(videoUrl);
           }
           break;
         }
@@ -122,7 +142,7 @@ public class ManimVideoCodeExecuteService {
     } else {
       log.error("Failed to run task:{}", taskFolder);
     }
-    return execute;
+    return result;
   }
 
   private void addFolder(String subFolder, List<String> videoFolders) {
