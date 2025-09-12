@@ -57,7 +57,9 @@ public class ManimVideoCodeExecuteService {
       String text = FileUtil.readString(scriptFile);
       result.setText(text);
     }
-    boolean success = result.getExitCode() == 0;
+    int exitCode = result.getExitCode();
+    log.info("exitCode:{},{}", id, exitCode);
+    boolean success = exitCode == 0;
 
     if (success) {
       String dataHlsVideoDir = "./data" + "/" + "hls" + "/" + id;
@@ -84,8 +86,8 @@ public class ManimVideoCodeExecuteService {
             File mp4File = mp4Files[i];
             String mp4Path = mp4File.getAbsolutePath();
             String outputJpgPath = dataHlsVideoDir + "/" + mp4File.getName() + ".jpg";
-            int exitCode = NativeMedia.saveLastFrame(mp4Path, outputJpgPath);
-            if (exitCode == 0) {
+            int saveExitCode = NativeMedia.saveLastFrame(mp4Path, outputJpgPath);
+            if (saveExitCode == 0) {
               imagesFilePaths.add(outputJpgPath.replace("./", "/"));
             }
             mp4FilePaths[i] = mp4Path;
@@ -105,8 +107,8 @@ public class ManimVideoCodeExecuteService {
           log.info("found file:{},{}", videoFilePath, videoLength);
           if (sessionPrt != null) {
             String outputJpgPath = dataHlsVideoDir + "/" + file.getName() + ".jpg";
-            int exitCode = NativeMedia.saveLastFrame(videoFilePath, outputJpgPath);
-            if (exitCode == 0) {
+            int saveExitCode = NativeMedia.saveLastFrame(videoFilePath, outputJpgPath);
+            if (saveExitCode == 0) {
               result.setImage(outputJpgPath.replace("./", "/"));
             }
 
