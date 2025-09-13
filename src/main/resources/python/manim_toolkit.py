@@ -8,15 +8,12 @@ from enum import Enum
 from typing import Any, Self
 
 import manimpango
-import numpy as np
 import requests
 from PIL.GimpGradientFile import EPSILON
-from manim import Mobject, Text, Scene, Group, Axes, \
-    FadeIn, FadeOut, TexTemplate  # DOWN, RIGHT, etc. are imported from manim.constants
-from manim import config
-from manim.constants import *  # Imports RIGHT, UP, ORIGIN, MED_SMALL_BUFF, EPSILON, etc.
+from manim import *
 from manim.typing import Point3D
 from moviepy import AudioFileClip
+import matplotlib.pyplot as plt
 
 # --- Font Detection ---
 DEFAULT_FONT = "PingFang SC"
@@ -318,3 +315,59 @@ class Title(Text):
             kwargs['weight'] = BOLD
 
         super().__init__(*args, **kwargs)
+
+
+def make_circle_on_axes(axes: Axes, R: float, **kwargs) -> VMobject:
+    """
+    在给定的 Axes 上绘制一个半径为 R 的圆，圆心在原点 (0,0)。
+
+    参数
+    ----
+    axes : Axes
+        Manim 的坐标系对象
+    R : float
+        圆的半径，使用数据坐标
+    **kwargs :
+        传递给曲线的其他绘制参数，例如 color, stroke_width 等
+
+    返回
+    ----
+    VMobject
+        表示该圆的曲线对象
+    """
+    return axes.plot_parametric_curve(
+        lambda t: np.array([R * np.cos(t), R * np.sin(t), 0]),
+        t_range=[0, TAU],
+        **kwargs
+    )
+
+
+# ----------------------------
+# 轻量版 MatplotlibFigure（把 Matplotlib Figure 转成 ImageMobject）
+# ----------------------------
+def _fig_to_rgba_array(fig, dpi=220, transparent=True):
+    fig.set_dpi(dpi)
+    if transparent:
+        fig.patch.set_alpha(0)
+        for ax in fig.axes:
+            try:
+                ax.set_facecolor("none")
+            except Exception:
+                pass
+    fig.canvas.draw()
+    w, h = fig.canvas.get_width_height()
+    buf = np.frombuffer(fig.canvas.tostring_argb(), dtype=np.uint8).reshape(h, w, 4)
+    rgba = buf[:, :, [1, 2, 3, 0]]  # ARGB -> RGBA
+    return rgba
+
+class MatplotlibFigure(ImageMobject):
+    def __init__(self, fig, size=None, dpi=220, transparent=True, close_figure=True, **kwargs):
+        arr = _fig_to_rgba_array(fig, dpi=dpi, transparent=transparent)
+        super().__init__(arr, **kwargs)
+        if size is not None:
+            if isinstance(size, (tuple, list)) and len(size) == 2:
+                self.set(width=float(size[0]), height=float(size[1]))
+            else:
+                self.set(width=float(size))
+        if close_figure:
+            plt.close(fig)
