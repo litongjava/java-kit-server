@@ -1,19 +1,28 @@
 # manim_toolkit.py
+from __future__ import annotations
+
 import hashlib
 import itertools
+import logging
 import os
 import platform
+import re
+import sys
+import time
 from contextlib import contextmanager
 from enum import Enum
+from pathlib import Path
 from typing import Any, Self
+from typing import Optional
 
 import manimpango
+import matplotlib.pyplot as plt
 import requests
 from PIL.GimpGradientFile import EPSILON
 from manim import *
+from manim import ImageMobject
 from manim.typing import Point3D
 from moviepy import AudioFileClip
-import matplotlib.pyplot as plt
 
 # --- Font Detection ---
 DEFAULT_FONT = "PingFang SC"
@@ -360,6 +369,7 @@ def _fig_to_rgba_array(fig, dpi=220, transparent=True):
     rgba = buf[:, :, [1, 2, 3, 0]]  # ARGB -> RGBA
     return rgba
 
+
 class MatplotlibFigure(ImageMobject):
     def __init__(self, fig, size=None, dpi=220, transparent=True, close_figure=True, **kwargs):
         arr = _fig_to_rgba_array(fig, dpi=dpi, transparent=transparent)
@@ -371,3 +381,235 @@ class MatplotlibFigure(ImageMobject):
                 self.set(width=float(size))
         if close_figure:
             plt.close(fig)
+
+
+"""
+抗造版 smart_image：
+- 并发安全：文件级锁 + 原子落盘（.part -> rename）
+- 重试机制：指数退避 + 可配置
+- 可观测性：标准 logging，环境变量可控
+- 行为可控：强制刷新、超时、重试次数均可配
+
+用法（示例见文末）：
+    from smart_image import smart_image
+    img = smart_image("牛顿.png")  # 不存在则调用生成接口并下载；存在则直接用
+"""
+
+# -------------------------
+# 可配置项（也支持通过环境变量覆盖）
+# -------------------------
+API_HOST = os.getenv("IMG_API_HOST", "https://api.image.explanation.fun")
+API_TOKEN = os.getenv("IMG_API_TOKEN", "123456")
+API_PATH = os.getenv("IMG_API_PATH", "/api/image/generate")
+API_TIMEOUT = float(os.getenv("IMG_API_TIMEOUT", "60"))  # 生成接口超时（秒）
+DL_TIMEOUT = float(os.getenv("IMG_DL_TIMEOUT", "60"))  # 下载超时（秒）
+RETRIES = int(os.getenv("IMG_RETRIES", "3"))  # 重试次数（不含首次）
+BACKOFF = float(os.getenv("IMG_BACKOFF", "1.6"))  # 退避倍率
+FORCE_REFRESH = os.getenv("IMG_FORCE_REFRESH", "0") == "1"  # 1=忽略本地缓存强制刷新
+LOCK_TIMEOUT = float(os.getenv("IMG_LOCK_TIMEOUT", "300"))  # 获取锁的最长等待秒数
+LOG_LEVEL = os.getenv("IMG_LOG_LEVEL", "INFO").upper()  # DEBUG/INFO/WARN/ERROR
+
+# -------------------------
+# 日志
+# -------------------------
+logger = logging.getLogger("smart_image")
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    fmt = logging.Formatter("[%(asctime)s][%(levelname)s][smart_image] %(message)s")
+    handler.setFormatter(fmt)
+    logger.addHandler(handler)
+logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+
+
+# -------------------------
+# 轻量跨平台文件锁
+#   - Linux/macOS: fcntl
+#   - Windows: msvcrt
+# -------------------------
+class FileLock:
+    def __init__(self, path: Path):
+        self.path = Path(path)
+        self._fh = None
+
+    def acquire(self, timeout: float = LOCK_TIMEOUT, poll_interval: float = 0.2):
+        start = time.time()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._fh = open(self.path, "a+b")
+        while True:
+            try:
+                if platform.system() == "Windows":
+                    import msvcrt
+                    msvcrt.locking(self._fh.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # 锁定成功
+                return
+            except Exception:
+                # 锁被占用
+                if time.time() - start > timeout:
+                    raise TimeoutError(f"Acquire lock timeout: {self.path}")
+                time.sleep(poll_interval)
+
+    def release(self):
+        if not self._fh:
+            return
+        try:
+            if platform.system() == "Windows":
+                import msvcrt
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            try:
+                self._fh.close()
+            except Exception:
+                pass
+            self._fh = None
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.release()
+
+
+# -------------------------
+# HTTP（用 requests 但延迟导入，避免未使用时报错）
+# -------------------------
+def _requests():
+    try:
+        import requests
+        return requests
+    except Exception as e:
+        raise RuntimeError(
+            "This module requires 'requests'. Please install it: pip install requests"
+        ) from e
+
+
+# -------------------------
+# 工具函数
+# -------------------------
+def _topic_from_filename(filename: str) -> str:
+    stem = Path(filename).stem
+    return re.sub(r"[-_]+", " ", stem).strip() or "image"
+
+
+def _api_generate(topic: str) -> str:
+    """调用生成接口，返回图片直链 URL。带重试。"""
+    req = _requests()
+    url = f"{API_HOST.rstrip('/')}{API_PATH}"
+    headers = {
+        "Authorization": f"Bearer {API_TOKEN}",
+    }
+    last_exc = None
+    for attempt in range(RETRIES + 1):
+        try:
+            logger.debug(f"Generate attempt {attempt}: {url} topic={topic!r}")
+            r = req.get(url, params={"topic": topic}, headers=headers, timeout=API_TIMEOUT)
+            r.raise_for_status()
+            data = r.json()
+            if not (isinstance(data, dict) and data.get("ok") is True):
+                raise RuntimeError(f"Bad response: {data}")
+            img_url = data["data"]["url"]
+            if not isinstance(img_url, str) or not img_url:
+                raise RuntimeError(f"Missing url in response: {data}")
+            logger.info(f"Generated image for topic={topic!r}: {img_url}")
+            return img_url
+        except Exception as e:
+            last_exc = e
+            if attempt < RETRIES:
+                sleep_s = (BACKOFF ** attempt) * 0.8 + 0.2
+                logger.warning(f"Generate failed (attempt {attempt}): {e}; retry in {sleep_s:.1f}s")
+                time.sleep(sleep_s)
+            else:
+                break
+    raise RuntimeError(f"Generate failed after retries: {last_exc}") from last_exc
+
+
+def _download(url: str, dest_part: Path):
+    """下载到临时 .part 文件（覆盖写），成功后由调用方 rename。带重试。"""
+    req = _requests()
+    last_exc = None
+    for attempt in range(RETRIES + 1):
+        try:
+            logger.debug(f"Download attempt {attempt}: {url} -> {dest_part}")
+            with req.get(url, stream=True, timeout=DL_TIMEOUT) as resp:
+                resp.raise_for_status()
+                dest_part.parent.mkdir(parents=True, exist_ok=True)
+                with open(dest_part, "wb") as f:
+                    for chunk in resp.iter_content(chunk_size=1 << 15):
+                        if chunk:
+                            f.write(chunk)
+            logger.info(f"Downloaded -> {dest_part} ({dest_part.stat().st_size} bytes)")
+            return
+        except Exception as e:
+            last_exc = e
+            if attempt < RETRIES:
+                sleep_s = (BACKOFF ** attempt) * 0.8 + 0.2
+                logger.warning(f"Download failed (attempt {attempt}): {e}; retry in {sleep_s:.1f}s")
+                time.sleep(sleep_s)
+            else:
+                break
+    raise RuntimeError(f"Download failed after retries: {last_exc}") from last_exc
+
+
+def _ensure_local_image(
+        filename: str, topic: Optional[str] = None
+) -> Path:
+    """
+    并发安全地确保 filename 存在：
+    - 若已存在且不强制刷新：直接返回
+    - 否则：获取文件锁 -> 调用生成接口 -> 下载到 .part -> 原子 rename -> 释放锁
+    """
+    p = Path(filename)
+    lock_path = p.with_suffix(p.suffix + ".lock")
+    part_path = p.with_suffix(p.suffix + ".part")
+
+    # 快速路径：存在且不刷新
+    if p.exists() and not FORCE_REFRESH:
+        logger.debug(f"Cache hit: {p}")
+        return p
+
+    # 锁内再检查一次，避免惊群
+    with FileLock(lock_path):
+        if p.exists() and not FORCE_REFRESH:
+            logger.debug(f"[locked] Cache hit after wait: {p}")
+            return p
+
+        top = topic or _topic_from_filename(filename)
+        img_url = _api_generate(top)
+
+        # 下载到 .part，成功后 rename 到最终文件名（原子操作）
+        _download(img_url, part_path)
+        # Windows 下若目标存在需要先删除
+        if p.exists():
+            try:
+                p.unlink()
+            except Exception:
+                pass
+        part_path.replace(p)  # 原子替换
+        logger.info(f"Ready: {p}")
+        return p
+
+
+# -------------------------
+# 公共入口
+# -------------------------
+def smart_image(
+        filename: str,
+        *,
+        topic: Optional[str] = None,
+        **image_mobject_kwargs,
+) -> ImageMobject:
+    """
+    用主题自动生成/下载图片并返回 ImageMobject。
+    - filename：希望最终保存的本地文件名（相对路径则相对 CWD）
+    - topic：可选，默认从文件名推导（去后缀，-/_ 转空格）
+    - 其余参数原样传给 ImageMobject
+    """
+    local = _ensure_local_image(filename, topic=topic)
+    return ImageMobject(str(local), **image_mobject_kwargs)
