@@ -599,7 +599,7 @@ def _ensure_local_image(
 # -------------------------
 # 公共入口
 # -------------------------
-def smart_image(
+def generate_image(
         filename: str,
         *,
         topic: Optional[str] = None,
