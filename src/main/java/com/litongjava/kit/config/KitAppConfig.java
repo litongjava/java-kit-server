@@ -9,6 +9,7 @@ import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
 import com.litongjava.kit.handler.ManimVideoHanlder;
+import com.litongjava.kit.handler.MomeryHandler;
 import com.litongjava.kit.handler.PingHandler;
 import com.litongjava.kit.handler.PythonHanlder;
 import com.litongjava.kit.handler.ScriptsHandler;
@@ -60,7 +61,7 @@ public class KitAppConfig implements BootConfiguration {
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
 
-      HttpFileDataHandler dataHandler = new HttpFileDataHandler();
+      HttpFileDataHandler dataHandler = new HttpFileDataHandler(false);
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
@@ -84,6 +85,8 @@ public class KitAppConfig implements BootConfiguration {
       GzipBombTestHandler gzipBombTestHandler = new GzipBombTestHandler();
       r.add("/gzip/bomb/test", gzipBombTestHandler::output);
 
+      MomeryHandler momeryHandler = new MomeryHandler();
+      r.add("/memory", momeryHandler::index);
     }
 
     TioBootHttpControllerRouter controllerRouter = TioBootServer.me().getControllerRouter();
