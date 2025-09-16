@@ -1,4 +1,4 @@
-app = "java-linux"
+app = "java-kit"
 primary_region = 'sjc'
 
 kill_signal = "SIGINT"

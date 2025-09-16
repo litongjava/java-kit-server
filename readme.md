@@ -47,13 +47,23 @@ VOLC_ACCESS_TOKEN=
 FISHAUDIO_API_KEY=
 MINIMAX_GROUP_ID=
 MINIMAX_API_KEY=
-
 ```
+
 4. **运行应用**  
    编译完成后，运行生成的 jar 包：
    ```bash
    java -jar target/java-kit-server-1.0.0.jar
    ```
+5. docker
+
+```
+docker build -t litongjava/java-kit-server:1.0.0 .
+```
+
+```sh
+docker run -dit -p 8082:80 -v /data/apps/java-kit-server:/app litongjava/java-kit-server:1.0.0
+```
+
 ## systemctl user
 ```shell
 mkdir -p ~/.config/systemd/user/
