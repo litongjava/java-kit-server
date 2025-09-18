@@ -104,7 +104,7 @@ def get_cache_filename(text: str) -> str:
 @contextmanager
 def custom_voiceover_tts(text: str,
                          token: str = "123456",
-                         base_url: str = "https://javalinux.explanation.fun/api/manim/tts"):
+                         base_url: str = "http://13.216.69.13/api/manim/tts"):
     script_path = os.path.join(SCRIPT_DIR, "script.txt")
     try:
         with open(script_path, "a", encoding="utf-8") as log_file:
@@ -398,7 +398,7 @@ class MatplotlibFigure(ImageMobject):
 # -------------------------
 # 可配置项（也支持通过环境变量覆盖）
 # -------------------------
-API_HOST = os.getenv("IMG_API_HOST", "https://api.image.explanation.fun")
+API_HOST = os.getenv("IMG_API_HOST", "https://manim.fly.dev")
 API_TOKEN = os.getenv("IMG_API_TOKEN", "123456")
 API_PATH = os.getenv("IMG_API_PATH", "/api/image/generate")
 API_TIMEOUT = float(os.getenv("IMG_API_TIMEOUT", "60"))  # 生成接口超时（秒）
@@ -565,7 +565,7 @@ def _ensure_local_image(
     - 若已存在且不强制刷新：直接返回
     - 否则：获取文件锁 -> 调用生成接口 -> 下载到 .part -> 原子 rename -> 释放锁
     """
-    p = Path(filename)
+    p = Path("generated_images", filename)
     lock_path = p.with_suffix(p.suffix + ".lock")
     part_path = p.with_suffix(p.suffix + ".part")
 
