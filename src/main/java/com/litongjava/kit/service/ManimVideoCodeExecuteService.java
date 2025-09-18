@@ -96,7 +96,7 @@ public class ManimVideoCodeExecuteService {
           videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
           NativeMedia.merge(mp4FilePaths, videoFilePath);
         } else {
-          // 必须返回绝对路径
+          // 必须返回相对路径
           videoFilePath = videoFolder + File.separator + mp4Files[0].getName();
         }
 
