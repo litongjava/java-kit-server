@@ -27,10 +27,16 @@ public class ManimVideoHanlder {
   public HttpResponse start(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();
     CORSUtils.enableCORS(response);
-    String sessionIdStr = request.getString("session_id");
+    String sessionIdStr = request.getString("session-id");
     Long sessionId = null;
-    if (sessionIdStr == null) {
-      sessionId = Long.valueOf(sessionIdStr);
+    if (sessionIdStr != null) {
+      try {
+        sessionId = Long.valueOf(sessionIdStr);
+      } catch (Exception e) {
+        log.error("Failed to parse value {}", sessionIdStr);
+        sessionId = SnowflakeIdUtils.id();
+      }
+
     } else {
       sessionId = SnowflakeIdUtils.id();
     }
