@@ -2,14 +2,12 @@ package com.litongjava.kit.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.hutool.FileUtil;
-import com.litongjava.tio.utils.hutool.ResourceUtil;
+import com.litongjava.tio.utils.path.WorkDirUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +28,7 @@ public class ManimImageCodeExecuteService {
     String imageFolder = "media" + File.separator + "images" + File.separator + id;
     log.info("imageFolder:{}", imageFolder);
     // 执行脚本
-    ProcessResult execute = execute(scriptPath);
+    ProcessResult execute = execute(scriptPath, id);
     execute.setTaskId(id);
     File imageFolderFile = new File(imageFolder);
     if (imageFolderFile.exists()) {
@@ -50,26 +48,24 @@ public class ManimImageCodeExecuteService {
     return execute;
   }
 
-  public static ProcessResult execute(String scriptPath) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, long taskId) throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
-    
+
     // 获取脚本所在目录
     File scriptFile = new File(scriptPath);
     File scriptDir = scriptFile.getParentFile();
     if (scriptDir != null && !scriptDir.exists()) {
       scriptDir.mkdirs();
     }
-    try (InputStream in = ResourceUtil.getResourceAsStream("python/manim_toolkit.py")) {
-      if (in == null) {
-        throw new IOException("Resource not found: python/manim_toolkit.py");
-      }
-      File manimUtilsFile = new File(scriptDir, "manim_toolkit.py");
-      Files.copy(in, manimUtilsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-    ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
-    pb.environment().put("PYTHONIOENCODING", "utf-8");
 
+    String cmd = "manim -s -qh --format=png " + scriptPath;
+    log.info("cmd:{}", cmd);
+    ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
+    String workingDir = WorkDirUtils.getWorkingDir();
+    pb.environment().put("PYTHONIOENCODING", "utf-8");
+    pb.environment().put("PYTHONPATH", workingDir);
+    pb.environment().put("TASK_ID", String.valueOf(taskId));
 
     // 定义日志文件路径，存放在与 scriptPath 相同的目录
     File stdoutFile = new File(scriptDir, "stdout.log");
