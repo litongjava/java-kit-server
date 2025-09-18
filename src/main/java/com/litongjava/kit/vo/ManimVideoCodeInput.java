@@ -10,7 +10,8 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class ManimVideoCodeInput {
-  private Long id;
+  private Long sessionId;
+  private Long taskId;
   private String code;
   private String quality;
   private int timeout;

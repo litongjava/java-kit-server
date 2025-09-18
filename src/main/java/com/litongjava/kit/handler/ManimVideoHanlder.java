@@ -27,7 +27,14 @@ public class ManimVideoHanlder {
   public HttpResponse start(HttpRequest request) {
     HttpResponse response = TioRequestContext.getResponse();
     CORSUtils.enableCORS(response);
-    long sessionId = SnowflakeIdUtils.id();
+    String sessionIdStr = request.getString("session_id");
+    Long sessionId = null;
+    if (sessionIdStr == null) {
+      sessionId = Long.valueOf(sessionIdStr);
+    } else {
+      sessionId = SnowflakeIdUtils.id();
+    }
+
     String subPath = "./data/session/" + sessionId;
     new File(subPath).mkdirs();
     String m3u8Path = subPath + "/main.m3u8";
@@ -40,12 +47,13 @@ public class ManimVideoHanlder {
     String tsPattern = subPath + "/segment_video_%03d.ts";
     int startNumber = 0;
     int segmentDuration = 2; // 每个分段时长（秒）
-    long initPersistentHls = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
+    long hlsPtr = NativeMedia.initPersistentHls(m3u8Path, tsPattern, startNumber, segmentDuration);
 
     ProcessResult processResult = new ProcessResult();
     processResult.setSessionId(sessionId);
-    processResult.setSessionIdPrt(initPersistentHls);
+    processResult.setSessionIdPrt(hlsPtr);
     processResult.setOutput(m3u8Path.replace("./", "/"));
+
     response.setJson(processResult);
     return response;
   }
@@ -129,12 +137,22 @@ public class ManimVideoHanlder {
       timeout = 590;
     }
 
+    String sessionIdStr = request.getHeader("session-id");
+
+    Long sessionId = null;
+    if (sessionIdStr != null) {
+      sessionId = Long.valueOf(sessionIdStr);
+    } else {
+      sessionId = SnowflakeIdUtils.id();
+    }
+
     String code_id = request.getHeader("code-id");
+
     Long id = null;
     if (code_id != null) {
       id = Long.valueOf(code_id);
     } else {
-      id = SnowflakeIdUtils.id();
+      id = sessionId;
     }
 
     String quality = request.getHeader("quality");
@@ -154,8 +172,8 @@ public class ManimVideoHanlder {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
-    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(id, code, quality, timeout, stream, session_prt,
-        m3u8Path);
+    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(sessionId, id, code, quality, timeout, stream,
+        session_prt, m3u8Path);
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {

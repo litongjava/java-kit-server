@@ -25,39 +25,40 @@ public class ManimVideoCodeExecuteService {
 
   public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext)
       throws IOException, InterruptedException {
-    Long id = input.getId();
+    Long sessionId = input.getSessionId();
+    Long taskId = input.getTaskId();
     String code = input.getCode();
     String quality = input.getQuality();
     int timeout = input.getTimeout();
     Long sessionPrt = input.getSessionPrt();
     String m3u8Path = input.getM3u8Path();
 
-    String folder = WorkDirUtils.workingScriptsDir() + File.separator + id;
-    File scriptDir = new File(folder);
+    String scriptSessionFolder = WorkDirUtils.workingScriptsDir() + File.separator + sessionId;
+    File scriptDir = new File(scriptSessionFolder);
     if (!scriptDir.exists()) {
       scriptDir.mkdirs();
     }
-    String scriptPath = folder + File.separator + id + ".py";
+    String scriptPath = scriptSessionFolder + File.separator + taskId + ".py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
 
-    List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, id.toString());
+    List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, taskId.toString());
 
     // 执行脚本
-    ProcessResult result = execute(scriptPath, id, timeout, quality);
-    result.setTaskId(id);
+    ProcessResult result = execute(scriptPath, taskId, timeout, quality);
+    result.setTaskId(taskId);
     // 读取字幕
-    String textPath = WorkDirUtils.workingMediaDir + File.separator + "tts_text" + File.separator + id + ".txt";
+    String textPath = WorkDirUtils.workingMediaDir + File.separator + "tts_text" + File.separator + taskId + ".txt";
     File scriptFile = new File(textPath);
     if (scriptFile.exists()) {
       String text = FileUtil.readString(scriptFile);
       result.setText(text);
     }
     int exitCode = result.getExitCode();
-    log.info("exitCode:{},{}", id, exitCode);
+    log.info("exitCode:{},{}", taskId, exitCode);
     boolean success = exitCode == 0;
 
     if (success) {
-      String dataHlsVideoDir = "./data" + "/" + "hls" + "/" + id;
+      String dataHlsVideoDir = "./data" + "/" + "hls" + "/" + taskId;
       File file = new File(dataHlsVideoDir);
       if (!file.exists()) {
         file.mkdirs();
@@ -134,7 +135,7 @@ public class ManimVideoCodeExecuteService {
         }
       }
       if (!found) {
-        log.error("not found video:{},id:{}", WorkDirUtils.workingMediaDir, id);
+        log.error("not found video:{},id:{}", WorkDirUtils.workingMediaDir, taskId);
       }
     } else {
       log.error("Failed to run task:{}", scriptPath);
