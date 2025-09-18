@@ -158,7 +158,7 @@ public class ManimVideoHanlder {
     if (code_id != null) {
       id = Long.valueOf(code_id);
     } else {
-      id = sessionId;
+      id = SnowflakeIdUtils.id();
     }
 
     String quality = request.getHeader("quality");
@@ -166,8 +166,8 @@ public class ManimVideoHanlder {
       quality = "l";
     }
 
-    log.info("session_prt={},m3u8Path={},code_id={},code_timeout={},quality={}", session_prt, m3u8Path, code_id,
-        code_timeout, quality);
+    log.info("session_id:{},session_prt={},m3u8Path={},code_id={},code_timeout={},quality={}", sessionId, session_prt,
+        m3u8Path, code_id, code_timeout, quality);
     if (stream == null) {
       stream = false;
     }
