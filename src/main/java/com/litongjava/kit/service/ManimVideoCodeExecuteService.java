@@ -178,10 +178,10 @@ public class ManimVideoCodeExecuteService {
 
     // manim -ql --fps 10 --progress_bar none --verbosity WARNING --media_dir
     // cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene
-    String cmd = "manim -qh --fps 10  --progress_bar none --verbosity WARNING %s -a";
-    cmd = String.format(cmd, scriptPath);
+    String cmd = "manim -q%s --fps 10  --progress_bar none --verbosity WARNING %s -a";
+    cmd = String.format(cmd, quality, scriptPath);
     log.info("cmd:{}", cmd);
-    File runSh = new File(scriptDir, "run.sh");
+    File runSh = new File(scriptDir, taskId + "_run.sh");
     FileUtil.writeString(cmd, runSh);
 
     ProcessBuilder pb = new ProcessBuilder("manim", "-q" + quality, "--fps", "10",
@@ -195,7 +195,7 @@ public class ManimVideoCodeExecuteService {
     pb.environment().put("PYTHONPATH", workingDir);
     pb.environment().put("TASK_ID", String.valueOf(taskId));
 
-    ProcessResult result = ProcessUtils.execute(scriptDir, pb, timeout);
+    ProcessResult result = ProcessUtils.execute(scriptDir, taskId, pb, timeout);
 
     return result;
   }
