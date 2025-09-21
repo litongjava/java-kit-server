@@ -3,9 +3,9 @@ package com.litongjava.kit.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 import com.litongjava.tio.utils.commandline.ProcessResult;
+import com.litongjava.tio.utils.commandline.ProcessUtils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.path.WorkDirUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
@@ -66,26 +66,8 @@ public class ManimImageCodeExecuteService {
     pb.environment().put("PYTHONIOENCODING", "utf-8");
     pb.environment().put("PYTHONPATH", workingDir);
     pb.environment().put("TASK_ID", String.valueOf(taskId));
-
-    // 定义日志文件路径，存放在与 scriptPath 相同的目录
-    File stdoutFile = new File(scriptDir, "stdout.log");
-    File stderrFile = new File(scriptDir, "stderr.log");
-
-    // 将输出和错误流重定向到对应的日志文件
-    pb.redirectOutput(stdoutFile);
-    pb.redirectError(stderrFile);
-
-    Process process = pb.start();
-    int exitCode = process.waitFor();
-
-    // 读取日志文件内容，返回给客户端（如果需要实时返回，可用其他方案监控文件变化）
-    String stdoutContent = new String(Files.readAllBytes(stdoutFile.toPath()), StandardCharsets.UTF_8);
-    String stderrContent = new String(Files.readAllBytes(stderrFile.toPath()), StandardCharsets.UTF_8);
-
-    ProcessResult result = new ProcessResult();
-    result.setExitCode(exitCode);
-    result.setStdOut(stdoutContent);
-    result.setStdErr(stderrContent);
+    
+    ProcessResult result = ProcessUtils.execute(scriptDir, taskId, pb, 120);
 
     return result;
   }
