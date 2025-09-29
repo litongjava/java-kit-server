@@ -4,11 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import com.google.common.io.Files;
 import com.litongjava.kit.utils.HttpFileUtils;
 import com.litongjava.media.utils.VideoWaterUtils;
 import com.litongjava.model.body.RespBodyVo;
-import com.litongjava.model.http.response.ResponseVo;
+import com.litongjava.result.OkResult;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -16,7 +15,6 @@ import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.http.server.util.Resps;
 import com.litongjava.tio.utils.crypto.Md5Utils;
 import com.litongjava.tio.utils.http.ContentTypeUtils;
-import com.litongjava.tio.utils.http.HttpUtils;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.hutool.StrUtil;
 
@@ -44,8 +42,20 @@ public class VideoWaterHandler {
     if (StrUtil.isBlank(path)) {
       return response.body("path can not be empty");
     }
+    log.info("path:{}", path);
 
-    String targetFile = "." + path;
+    String targetFile = null;
+    if (path.startsWith("http")) {
+      OkResult<String> okResult = HttpFileUtils.download(path);
+      if (okResult.isOk()) {
+        targetFile = okResult.getResult();
+      } else {
+        return response.setBodyString(okResult.getMessage());
+      }
+    } else {
+      targetFile = "." + path;
+    }
+
     File file = new File(targetFile);
     if (!file.exists()) {
       response.setStatus(404);
@@ -130,30 +140,15 @@ public class VideoWaterHandler {
 
     String targetFile = null;
     if (path.startsWith("http")) {
-      String url = path;
-      path = HttpFileUtils.getLocalPath(path);
-      ResponseVo responseVo = HttpUtils.download(url);
-      if (!responseVo.isOk()) {
-        return response.body(RespBodyVo.fail("file is not exists"));
-      }
-
-      targetFile = "downloads" + File.separator + path;
-
-      try {
-        File to = new File(targetFile);
-        File parentFile = to.getParentFile();
-        if (!parentFile.exists()) {
-          parentFile.mkdirs();
-        }
-        Files.write(responseVo.getBodyBytes(), to);
-      } catch (IOException e) {
-        log.error(e.getMessage(), e);
-        return response.body(RespBodyVo.fail(e.getMessage()));
+      OkResult<String> okResult = HttpFileUtils.download(path);
+      if (okResult.isOk()) {
+        targetFile = okResult.getResult();
+      } else {
+        return response.setBodyString(okResult.getMessage());
       }
     } else {
       targetFile = "." + path;
     }
-
     File file = new File(targetFile);
     if (!file.exists()) {
       return response.body(RespBodyVo.fail("file is not exists"));
