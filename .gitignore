@@ -168,3 +168,4 @@ kokoro-en-v0_19/
 sherpa-onnx-jni.dll
 tts-kokoro-en.wav
 split_scenes/
+downloads/

@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import com.google.common.io.Files;
+import com.litongjava.kit.utils.HttpFileUtils;
 import com.litongjava.media.utils.VideoWaterUtils;
 import com.litongjava.model.body.RespBodyVo;
+import com.litongjava.model.http.response.ResponseVo;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -13,9 +16,13 @@ import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.http.server.util.Resps;
 import com.litongjava.tio.utils.crypto.Md5Utils;
 import com.litongjava.tio.utils.http.ContentTypeUtils;
+import com.litongjava.tio.utils.http.HttpUtils;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.hutool.StrUtil;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class VideoWaterHandler {
 
   public HttpResponse index(HttpRequest request) {
@@ -116,12 +123,37 @@ public class VideoWaterHandler {
     HttpResponse response = TioRequestContext.getResponse();
     CORSUtils.enableCORS(response);
     String path = request.getString("path");
-
+    log.info("path:{}", path);
     if (StrUtil.isBlank(path)) {
       return response.body("path can not be empty");
     }
 
-    String targetFile = "." + path;
+    String targetFile = null;
+    if (path.startsWith("http")) {
+      String url = path;
+      path = HttpFileUtils.getLocalPath(path);
+      ResponseVo responseVo = HttpUtils.download(url);
+      if (!responseVo.isOk()) {
+        return response.body(RespBodyVo.fail("file is not exists"));
+      }
+
+      targetFile = "downloads" + File.separator + path;
+
+      try {
+        File to = new File(targetFile);
+        File parentFile = to.getParentFile();
+        if (!parentFile.exists()) {
+          parentFile.mkdirs();
+        }
+        Files.write(responseVo.getBodyBytes(), to);
+      } catch (IOException e) {
+        log.error(e.getMessage(), e);
+        return response.body(RespBodyVo.fail(e.getMessage()));
+      }
+    } else {
+      targetFile = "." + path;
+    }
+
     File file = new File(targetFile);
     if (!file.exists()) {
       return response.body(RespBodyVo.fail("file is not exists"));
