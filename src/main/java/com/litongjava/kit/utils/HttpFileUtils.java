@@ -26,9 +26,8 @@ public class HttpFileUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static OkResult<String> download(String path) {
-    String url = path;
-    path = HttpFileUtils.getLocalPath(path);
+  public static OkResult<String> download(String url) {
+    String path = getLocalPath(url);
 
     String targetFile = "downloads" + File.separator + path;
 
