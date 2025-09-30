@@ -20,9 +20,15 @@ public class CmdInterpreterUtils {
       processBuilder = new ProcessBuilder("bash", "-c", cmd);
     }
     long id = SnowflakeIdUtils.id();
-    File file = new File(id + "");
+    String folder = "scripts" + File.separator + id;
+    File fileFolder = new File(folder);
+    if (!fileFolder.exists()) {
+      fileFolder.mkdirs();
+    }
+
     try {
-      result = ProcessUtils.execute(file, processBuilder);
+      result = ProcessUtils.execute(fileFolder, processBuilder);
+      result.setTaskId(id);
     } catch (IOException | InterruptedException e) {
       result.setStdErr(e.getMessage());
       result.setExitCode(-1);
