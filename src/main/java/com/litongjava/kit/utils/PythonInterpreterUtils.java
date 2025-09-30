@@ -1,9 +1,8 @@
 package com.litongjava.kit.utils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,58 +11,62 @@ import com.jfinal.kit.Kv;
 import com.litongjava.template.PythonCodeEngine;
 import com.litongjava.tio.utils.base64.Base64Utils;
 import com.litongjava.tio.utils.commandline.ProcessResult;
+import com.litongjava.tio.utils.commandline.ProcessUtils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class PythonInterpreterUtils {
-  public static ProcessResult execute(String scriptPath, String script_dir) throws IOException, InterruptedException {
+  public static ProcessResult execute(String scriptPath, String script_dir) {
     String imagesDir = script_dir + File.separator + "images";
     File imagesFolder = new File(imagesDir);
     if (!imagesFolder.exists()) {
       imagesFolder.mkdirs();
     }
 
-    String fullCode = PythonCodeEngine.renderToString("main.py", Kv.by("script_path", scriptPath).set("script_dir", script_dir));
+    String fullCode = PythonCodeEngine.renderToString("main.py",
+        Kv.by("script_path", scriptPath).set("script_dir", script_dir));
 
     // 构造 ProcessBuilder
-    String osName = System.getProperty("os.name");
-    ProcessBuilder pb = null;
-    if (osName.toLowerCase().contains("windows")) {
-      pb = new ProcessBuilder("python", "-c", fullCode);
-    } else {
-      pb = new ProcessBuilder("python3", "-c", fullCode);
+    String osName = System.getProperty("os.name").toLowerCase();
+    ProcessBuilder processBuilder = null;
 
-    }
-    Process process = pb.start();
+    try {
+      // 先检测 python 是否存在
+      Process checkPython = null;
+      if (osName.contains("windows")) {
+        checkPython = new ProcessBuilder("where", "python").start();
+      } else {
+        checkPython = new ProcessBuilder("which", "python").start();
+      }
 
-    // 读取标准输出 (可能包含base64以及脚本本身的print信息)
-    BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+      int exitCode = checkPython.waitFor();
+      if (exitCode == 0) {
+        // python 存在
+        processBuilder = new ProcessBuilder("python", "-c", fullCode);
+      } else {
+        // python 不存在，尝试 python3
+        processBuilder = new ProcessBuilder("python3", "-c", fullCode);
+      }
 
-    // 读取错误输出
-    BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
-
-    // 用于存放所有的标准输出行
-    StringBuilder outputBuilder = new StringBuilder();
-
-    String line;
-    while ((line = stdInput.readLine()) != null) {
-      outputBuilder.append(line).append("\n");
-    }
-
-    // 收集错误输出
-    StringBuilder errorBuilder = new StringBuilder();
-    while ((line = stdError.readLine()) != null) {
-      errorBuilder.append(line).append("\n");
+    } catch (Exception e) {
+      // 出现异常时默认使用 python3
+      processBuilder = new ProcessBuilder("python3", "-c", fullCode);
     }
 
-    // 等待进程结束
-    int exitCode = process.waitFor();
+    File file = new File(script_dir);
+    ProcessResult result = null;
+    try {
+      result = ProcessUtils.execute(file, processBuilder);
+    } catch (IOException | InterruptedException e) {
+      result = new ProcessResult();
+      result.setStdErr(e.getMessage());
+      result.setExitCode(-1);
+      return result;
+    }
 
-    // 构造返回实体
-    ProcessResult result = new ProcessResult();
-    result.setExitCode(exitCode);
-    result.setStdOut(outputBuilder.toString());
-    result.setStdErr(errorBuilder.toString());
     File[] listFiles = imagesFolder.listFiles();
     if (listFiles != null && listFiles.length > 0) {
       List<String> images = new ArrayList<>();
@@ -79,7 +82,7 @@ public class PythonInterpreterUtils {
 
   /**
    */
-  public static ProcessResult executeCode(String code) throws IOException, InterruptedException {
+  public static ProcessResult executeCode(String code) {
 
     long id = SnowflakeIdUtils.id();
     String folder = "scripts" + File.separator + id;
@@ -88,13 +91,18 @@ public class PythonInterpreterUtils {
       fileFolder.mkdirs();
     }
     String scriptPath = folder + File.separator + "script.py";
-    FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
+    try {
+      FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException e) {
+      log.error(e.getMessage(), e);
+      return ProcessResult.buildMessage(e.getMessage());
+    }
     ProcessResult execute = execute(scriptPath, folder);
     execute.setTaskId(id);
     return execute;
   }
 
-  public static ProcessResult executeScript(String scriptPath) throws IOException, InterruptedException {
+  public static ProcessResult executeScript(String scriptPath) {
     long id = SnowflakeIdUtils.id();
     String folder = "scripts" + File.separator + id;
     File fileFolder = new File(folder);

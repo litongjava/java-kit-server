@@ -9,6 +9,7 @@ import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
 import com.litongjava.kit.handler.ManimVideoHanlder;
+import com.litongjava.kit.handler.McpHandler;
 import com.litongjava.kit.handler.MomeryHandler;
 import com.litongjava.kit.handler.PingHandler;
 import com.litongjava.kit.handler.PythonHanlder;
@@ -17,6 +18,7 @@ import com.litongjava.kit.handler.SpeedTestHandler;
 import com.litongjava.kit.handler.TestController;
 import com.litongjava.kit.handler.VideoWaterHandler;
 import com.litongjava.kit.handler.YoutubeHandler;
+import com.litongjava.kit.mcp.McpCoderServer;
 import com.litongjava.llm.proxy.config.LLMProxyAppConfig;
 import com.litongjava.tio.boot.admin.config.TioAdminDbConfiguration;
 import com.litongjava.tio.boot.http.handler.common.HttpFileDataHandler;
@@ -87,6 +89,12 @@ public class KitAppConfig implements BootConfiguration {
 
       MomeryHandler momeryHandler = new MomeryHandler();
       r.add("/memory", momeryHandler::index);
+
+      McpCoderServer mcpCoderServer = new McpCoderServer();
+      McpHandler mcpCoderHandler = new McpHandler(mcpCoderServer);
+      r.add("/mcp", mcpCoderHandler);
+//      WebSocketRouter router = TioBootServer.me().getWebSocketRouter();
+//      router.add("/mcp/coder", mcpCoderHandler);
     }
 
     TioBootHttpControllerRouter controllerRouter = TioBootServer.me().getControllerRouter();
@@ -115,7 +123,7 @@ public class KitAppConfig implements BootConfiguration {
         //
         "openai/**", "/anthropic/**", "/google/**", "/openrouter/**", "/cerebras/**",
         //
-        "/test/**", "/tts");
+        "/test/**", "/tts", "/mcp");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);

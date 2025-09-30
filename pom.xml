@@ -56,6 +56,12 @@
       <version>1.0.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.litongjava</groupId>
+      <artifactId>java-mcp</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
     <!-- 日志框架 -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
