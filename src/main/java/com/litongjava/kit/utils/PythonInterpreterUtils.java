@@ -29,6 +29,9 @@ public class PythonInterpreterUtils {
     String fullCode = PythonCodeEngine.renderToString("main.py",
         Kv.by("script_path", scriptPath).set("script_dir", script_dir));
 
+    String mainPy = script_dir + File.separator + "main.py";
+
+    FileUtil.writeString(fullCode, new File(mainPy));
     // 构造 ProcessBuilder
     String osName = System.getProperty("os.name").toLowerCase();
     ProcessBuilder processBuilder = null;
@@ -45,10 +48,10 @@ public class PythonInterpreterUtils {
       int exitCode = checkPython.waitFor();
       if (exitCode == 0) {
         // python 存在
-        processBuilder = new ProcessBuilder("python", "-c", fullCode);
+        processBuilder = new ProcessBuilder("python", mainPy);
       } else {
         // python 不存在，尝试 python3
-        processBuilder = new ProcessBuilder("python3", "-c", fullCode);
+        processBuilder = new ProcessBuilder("python3", mainPy);
       }
 
     } catch (Exception e) {
