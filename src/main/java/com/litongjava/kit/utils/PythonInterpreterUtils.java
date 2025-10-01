@@ -31,7 +31,11 @@ public class PythonInterpreterUtils {
 
     String mainPy = script_dir + File.separator + "main.py";
 
-    FileUtil.writeString(fullCode, new File(mainPy));
+    try {
+      FileUtil.writeString(fullCode, mainPy, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException e1) {
+      e1.printStackTrace();
+    }
     // 构造 ProcessBuilder
     String osName = System.getProperty("os.name").toLowerCase();
     ProcessBuilder processBuilder = null;
