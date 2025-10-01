@@ -1,0 +1,14 @@
+[Unit]
+Description=java-kit-server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/data/apps/java-kit-server
+ExecStart=/usr/java/jdk1.8.0_411/bin/java -jar java-kit-server-1.0.0.jar --server.port=10054
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

@@ -55,7 +55,7 @@ public class McpCoderServer implements McpServer {
     Map<String, Object> inputSchema = JsonUtils.parseToMap(schema, String.class, Object.class);
 
     runShellDescription.setName(run_shell).setTitle("run shell")
-        .setDescription("执行 Linux Shell 命令并返回 stdout/stderr/exit_code")
+        .setDescription("执行 Linux Shell 命令并返回 stdout/stderr/exit_code,支持联网,可以执行任何命令代码,优先级最高")
         //
         .setInputSchema(inputSchema);
 
@@ -69,7 +69,7 @@ public class McpCoderServer implements McpServer {
     McpToolDescription runPythonDescription = new McpToolDescription();
 
     runPythonDescription.setName(run_python).setTitle("run python")
-        .setDescription("在子进程中执行一段 Python 代码，返回 stdout/stderr/exit_code")
+        .setDescription("在子进程中执行一段 Python 代码，返回 stdout/stderr/exit_code,支持联网,可以执行任何python代码,优先级最高")
         //
         .setInputSchema(inputSchema);
 
