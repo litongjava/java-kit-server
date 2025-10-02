@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.litongjava.chat.UniChatClient;
-import com.litongjava.chat.UniChatRequest;
-import com.litongjava.chat.UniChatResponse;
 import com.litongjava.kit.service.GoogleGeminiSearchService;
 import com.litongjava.kit.utils.CmdInterpreterUtils;
 import com.litongjava.kit.utils.PythonInterpreterUtils;
@@ -27,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class McpCoderServer extends McpServer {
 
   private GoogleGeminiSearchService aiSearchService = new GoogleGeminiSearchService();
+
   public McpCoderServer() {
     super();
   }
@@ -55,7 +53,8 @@ public class McpCoderServer extends McpServer {
 
     // ai_search（留一个简单的缺省实现，子类可覆盖 handler 或重载注册）
     RegisteredTool aiSearch = McpToolRegistry.builder("ai_search").title("AI Search")
-        .description("智能搜索服务,将问题拆分多个关键字,根据关键字从google搜索引擎获取数据.大模型根据问题和获取的数据进行回答,输出回答后的文本")
+        .description("智能搜索服务。会将问题拆分成多个关键字，通过 Google 搜索获取数据，然后结合模型进行回答,延迟20s.")
+        //
         .addStringProperty("question", "Question", true).handler(this::handleAiSearch).build();
     registry.register(aiSearch);
 
@@ -97,8 +96,15 @@ public class McpCoderServer extends McpServer {
     Object question = args.get("question");
     if (question instanceof String) {
       log.info("keyword: {}", question);
-      String text = JsonUtils.toSkipNullJson(aiSearchService.search((String)question));
-      contents.add(McpContent.buildText(text));
+      try {
+        String text = JsonUtils.toSkipNullJson(aiSearchService.search((String) question));
+        contents.add(McpContent.buildText(text));
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        String json = JsonUtils.toSkipNullJson(ResultVo.fail(e.getMessage()));
+        contents.add(McpContent.buildText(json));
+      }
+
     } else {
       String json = JsonUtils.toSkipNullJson(ResultVo.fail("question must be a string"));
       contents.add(McpContent.buildText(json));
