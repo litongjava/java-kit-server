@@ -14,7 +14,7 @@ import com.litongjava.mcp.model.McpToolsCallParams;
 import com.litongjava.mcp.model.McpToolsCallResult;
 import com.litongjava.mcp.model.McpToolsListResult;
 import com.litongjava.mcp.model.RpcError;
-import com.litongjava.mcp.server.McpServer;
+import com.litongjava.mcp.server.IMcpServer;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.core.Tio;
@@ -35,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class McpHandler implements HttpRequestHandler {
 
-  private McpServer mcpServer;
+  private IMcpServer mcpServer;
 
-  public McpHandler(McpServer mcpServer) {
+  public McpHandler(IMcpServer mcpServer) {
     this.mcpServer = mcpServer;
   }
 
