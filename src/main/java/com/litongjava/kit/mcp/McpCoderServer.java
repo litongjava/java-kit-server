@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.litongjava.chat.UniChatClient;
+import com.litongjava.chat.UniChatRequest;
+import com.litongjava.chat.UniChatResponse;
+import com.litongjava.kit.service.GoogleGeminiSearchService;
 import com.litongjava.kit.utils.CmdInterpreterUtils;
 import com.litongjava.kit.utils.PythonInterpreterUtils;
 import com.litongjava.mcp.model.McpContent;
@@ -22,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class McpCoderServer extends McpServer {
 
+  private GoogleGeminiSearchService aiSearchService = new GoogleGeminiSearchService();
   public McpCoderServer() {
     super();
   }
@@ -92,7 +97,7 @@ public class McpCoderServer extends McpServer {
     Object question = args.get("question");
     if (question instanceof String) {
       log.info("keyword: {}", question);
-      String text = JsonUtils.toSkipNullJson("示例搜索结果");
+      String text = JsonUtils.toSkipNullJson(aiSearchService.search((String)question));
       contents.add(McpContent.buildText(text));
     } else {
       String json = JsonUtils.toSkipNullJson(ResultVo.fail("question must be a string"));
