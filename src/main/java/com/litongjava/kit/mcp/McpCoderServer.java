@@ -29,6 +29,7 @@ public class McpCoderServer implements McpServer {
 
   public static final String run_python = "run_python";
   public static final String run_shell = "run_shell";
+  public static final String ai_search = "ai_search";
 
   @Override
   public McpInitializeResult initialize(McpInitializeParams params, McpRequestContext ctx) throws McpRpcException {
@@ -75,6 +76,20 @@ public class McpCoderServer implements McpServer {
 
     list.add(runPythonDescription);
 
+    McpToolDescription aiSearchDescription = new McpToolDescription();
+
+    url = ResourceUtil.getResource("json/ai_search_inputSchema.json");
+    schema = FileUtil.readString(url);
+
+    inputSchema = JsonUtils.parseToMap(schema, String.class, Object.class);
+    
+    aiSearchDescription.setName(ai_search).setTitle("AI Search")
+        .setDescription("智能搜索服务,将问题拆分多个关键字,根据关键字从google搜索引擎获取数据.大模型根据问题和获取的数据进行回答,输出回答后的文本")
+        //
+        .setInputSchema(inputSchema);
+
+    list.add(aiSearchDescription);
+
     return new McpToolsListResult(list);
   }
 
@@ -97,6 +112,16 @@ public class McpCoderServer implements McpServer {
       if (code instanceof String) {
         ProcessResult result = PythonInterpreterUtils.executeCode((String) code);
         String text = JsonUtils.toSkipNullJson(result);
+        McpContent content = McpContent.buildText(text);
+        contents.add(content);
+      }
+
+    } else if (ai_search.equals(name)) {
+      Object question = params.getArguments().get("question");
+      if (question instanceof String) {
+        log.info("keyword:{}", question);
+        
+        String text = JsonUtils.toSkipNullJson("示例搜索结果");
         McpContent content = McpContent.buildText(text);
         contents.add(content);
       }

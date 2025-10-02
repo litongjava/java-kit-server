@@ -1,0 +1,17 @@
+{
+    "title": "ai_searchArguments",
+    "type": "object"
+    "properties":
+    {
+        "question":
+        {
+            "title": "Question",
+            "type": "string"
+        }
+    },
+    "required":
+    [
+        "question"
+    ],
+    
+}
