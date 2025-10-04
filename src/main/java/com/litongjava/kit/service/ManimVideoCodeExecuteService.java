@@ -54,8 +54,8 @@ public class ManimVideoCodeExecuteService {
       result.setText(text);
     }
 
-    // 读取文字
-    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId + ".txt";
+    // 读取字幕
+    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId + ".vtt";
     File subtitleFile = new File(subtitlePath);
     if (subtitleFile.exists()) {
       String text = FileUtil.readString(subtitleFile);
