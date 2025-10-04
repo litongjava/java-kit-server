@@ -46,13 +46,22 @@ public class ManimVideoCodeExecuteService {
     // 执行脚本
     ProcessResult result = execute(scriptPath, taskId, timeout, quality);
     result.setTaskId(taskId);
-    // 读取字幕
+    // 读取文字
     String textPath = WorkDirUtils.workingMediaDir + File.separator + "tts_text" + File.separator + taskId + ".txt";
     File scriptFile = new File(textPath);
     if (scriptFile.exists()) {
       String text = FileUtil.readString(scriptFile);
       result.setText(text);
     }
+
+    // 读取文字
+    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId + ".txt";
+    File subtitleFile = new File(subtitlePath);
+    if (subtitleFile.exists()) {
+      String text = FileUtil.readString(subtitleFile);
+      result.setSubtitle(text);
+    }
+
     int exitCode = result.getExitCode();
     log.info("exitCode:{},{}", taskId, exitCode);
     boolean success = exitCode == 0;
