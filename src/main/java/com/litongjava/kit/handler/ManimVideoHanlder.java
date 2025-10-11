@@ -12,6 +12,7 @@ import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.core.Tio;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
+import com.litongjava.tio.http.common.UploadFile;
 import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
@@ -171,15 +172,27 @@ public class ManimVideoHanlder {
     if (stream == null) {
       stream = false;
     }
-    String code = request.getBodyString();
+    String code = null;
+    UploadFile uploadFile = request.getUploadFile("code");
+    if (uploadFile != null) {
+      code = new String(uploadFile.getData());
+    } else {
+      code = request.getBodyString();
+    }
+
+    String figure = null;
+    UploadFile figureFile = request.getUploadFile("code");
+    if (figureFile != null) {
+      figure = new String(figureFile.getData());
+    }
 
     if (stream) {
       response.addServerSentEventsHeader();
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
-    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(sessionId, id, code, quality, timeout, stream,
-        session_prt, m3u8Path);
+    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(sessionId, id, code, figure, quality, timeout,
+        stream, session_prt, m3u8Path);
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {

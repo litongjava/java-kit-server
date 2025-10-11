@@ -13,6 +13,8 @@ public class ManimVideoCodeInput {
   private Long sessionId;
   private Long taskId;
   private String code;
+  // 图表的json格式
+  private String figure;
   private String quality;
   private int timeout;
   private Boolean stream;

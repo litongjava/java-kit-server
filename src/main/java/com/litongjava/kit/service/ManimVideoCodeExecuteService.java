@@ -32,6 +32,7 @@ public class ManimVideoCodeExecuteService {
     int timeout = input.getTimeout();
     Long sessionPrt = input.getSessionPrt();
     String m3u8Path = input.getM3u8Path();
+    String figure = input.getFigure();
 
     String scriptSessionFolder = WorkDirUtils.workingScriptsDir() + File.separator + sessionId;
     File scriptDir = new File(scriptSessionFolder);
@@ -40,6 +41,8 @@ public class ManimVideoCodeExecuteService {
     }
     String scriptPath = scriptSessionFolder + File.separator + taskId + ".py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
+    String figurePath = scriptSessionFolder + File.separator + "pgdp-output.json";
+    FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
 
     List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, taskId.toString());
 
@@ -55,7 +58,8 @@ public class ManimVideoCodeExecuteService {
     }
 
     // 读取字幕
-    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId + ".vtt";
+    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId
+        + ".vtt";
     File subtitleFile = new File(subtitlePath);
     if (subtitleFile.exists()) {
       String text = FileUtil.readString(subtitleFile);
