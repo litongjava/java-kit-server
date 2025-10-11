@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManimVideoCodeExecuteService {
+  public static final String pdgp_filename = "pgdp-output.json";
 
   public ProcessResult executeCode(ManimVideoCodeInput input, ChannelContext channelContext)
       throws IOException, InterruptedException {
@@ -39,10 +40,12 @@ public class ManimVideoCodeExecuteService {
     if (!scriptDir.exists()) {
       scriptDir.mkdirs();
     }
+    String figurePath = scriptSessionFolder + File.separator + pdgp_filename;
+    FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
+
+    code = code.replace(pdgp_filename, figurePath);
     String scriptPath = scriptSessionFolder + File.separator + taskId + ".py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-    String figurePath = scriptSessionFolder + File.separator + "pgdp-output.json";
-    FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
 
     List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, taskId.toString());
 

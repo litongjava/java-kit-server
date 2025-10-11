@@ -21,6 +21,7 @@ import requests
 from PIL.GimpGradientFile import EPSILON
 from manim import *
 from manim import ImageMobject
+from manim import Text as ManimText
 from manim.typing import Point3D
 from moviepy import AudioFileClip
 
@@ -33,6 +34,12 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 
 TTS_TEXT_DIR = os.path.join(config.media_dir, "tts_text")
 os.makedirs(TTS_TEXT_DIR, exist_ok=True)
+
+TTS_SUBTITLE_DIR = os.path.join(config.media_dir, "tts_subtitle")
+os.makedirs(TTS_SUBTITLE_DIR, exist_ok=True)
+
+# UNI_BASE_URL = "http://13.216.69.13"
+UNI_BASE_URL = "http://127.0.0.1"
 
 
 def get_cjk_font_name():
@@ -47,6 +54,7 @@ def get_cjk_font_name():
         return "Arial Unicode MS"
 
 
+@staticmethod
 def get_available_font():
     """Returns a font name if available, else None."""
     available_fonts = manimpango.list_fonts()
@@ -70,9 +78,53 @@ def get_cjk_template(font_name):
 \setCJKmainfont{{{font_name}}}
 \setCJKsansfont{{{font_name}}} 
 \setCJKmonofont{{{font_name}}}
-"""
-    )
+""")
     return cjk_template
+
+
+class Text(ManimText):
+    """改进版 Text：
+    - 自动缩放
+    - 自动检测可用字体
+    - 支持默认 font, font_size, color, line_spacing
+    """
+    DEFAULT_FONT_SIZE = 96
+    DEFAULT_COLOR = BLACK
+    DEFAULT_LINE_SPACING = 1.2
+    DEFAULT_SCALE=0.25
+
+    def __init__(self, text, font=None, font_size=None, color=None, line_spacing=None, **kwargs):
+        # ① 字体选择逻辑
+        if font is None:
+            font = get_available_font()
+
+        # ② 默认参数填充
+        font_size = font_size or self.DEFAULT_FONT_SIZE
+        color = color or self.DEFAULT_COLOR
+        line_spacing = line_spacing or self.DEFAULT_LINE_SPACING
+
+        # ③ 调用父类构造函数
+        super().__init__(
+            text,
+            font=font,
+            font_size=font_size,
+            color=color,
+            line_spacing=line_spacing,
+            **kwargs
+        )
+
+        # ④ 默认缩放
+        self.scale(self.DEFAULT_SCALE)
+
+
+class Title(Text):
+    def __init__(self, *args, **kwargs):
+        if 'font_weight' in kwargs and 'weight' not in kwargs:
+            kwargs['weight'] = kwargs.pop('font_weight')
+
+        if 'weight' not in kwargs:
+            kwargs['weight'] = BOLD
+        super().__init__(*args, **kwargs)
 
 
 def update_scene_number(scene: Scene, number_str: str):
@@ -103,35 +155,27 @@ def get_cache_filename(text: str) -> str:
 
 @contextmanager
 def custom_voiceover_tts(text: str,
+                         lang: str = "auto",
                          token: str = "123456",
-                         base_url: str = "http://13.216.69.13/api/manim/tts"):
+                         base_url: str = UNI_BASE_URL):
     task_id = os.getenv("TASK_ID")
+    if not task_id:
+        task_id = hashlib.md5(text.encode('utf-8')).hexdigest()
+
     script_path = os.path.join(TTS_TEXT_DIR, task_id + ".txt")
     try:
-        with open(script_path, "a", encoding="utf-8") as log_file:
-            log_file.write(text + "\n")
+        with open(script_path, "w", encoding="utf-8") as text_file:
+            text_file.write(text)
     except Exception:
         # If logging fails, continue without interrupting TTS
         pass
+
     """Fetches or uses cached TTS audio, yields a tracker with path and duration."""
-    cache_file = get_cache_filename(text)
-    audio_file = cache_file
+    audio_file = get_cache_filename(text)
     duration = 0
 
-    if not os.path.exists(cache_file):
-        try:
-            encoded = requests.utils.quote(text)
-            url = f"{base_url}?token={token}&input={encoded}"
-            resp = requests.get(url, stream=True, timeout=60)
-            resp.raise_for_status()
-            with open(cache_file, 'wb') as f:
-                for chunk in resp.iter_content(8192):
-                    if chunk:
-                        f.write(chunk)
-        except Exception:
-            audio_file = None
-            duration = 0
     if audio_file and os.path.exists(audio_file):
+        # write_subtitle_file(audio_file, base_url, token, task_id, None)
         try:
             # Use moviepy.editor.AudioFileClip
             with AudioFileClip(audio_file) as clip:
@@ -140,13 +184,53 @@ def custom_voiceover_tts(text: str,
             audio_file = None
             duration = 0
     else:
-        audio_file = None
-        duration = 0
+        try:
+            encoded = requests.utils.quote(text)
+            url = f"{base_url}/tts?token={token}&input={encoded}"
+            resp = requests.get(url, stream=True, timeout=60)
+            resp.raise_for_status()
+            with open(audio_file, 'wb') as f:
+                for chunk in resp.iter_content(8192):
+                    if chunk:
+                        f.write(chunk)
 
+            audio_file_path_on_server = resp.headers.get("path")
+            #write_subtitle_file(audio_file_path_on_server, base_url, token, task_id, text)
+            try:
+                # Use moviepy.editor.AudioFileClip
+                with AudioFileClip(audio_file) as clip:
+                    duration = clip.duration
+            except Exception:
+                audio_file = None
+                duration = 0
+        except Exception:
+            audio_file = None
+            duration = 0
+    logging.info(f"audio:{audio_file},duration:{duration}")
     tracker = CustomVoiceoverTracker(audio_file, duration)
     try:
         yield tracker
     finally:
+        pass
+
+
+def write_subtitle_file(audio_file_path_on_server, base_url, token, task_id, prompt):
+    url = ""
+    if prompt:
+        url = f"{base_url}/subtitle?token={token}&path={audio_file_path_on_server}&prompt={prompt}"
+    else:
+        url = f"{base_url}/subtitle?token={token}&path={audio_file_path_on_server}"
+    resp = requests.get(url, stream=True, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
+    subtitle = data["data"]
+    # logging.info(f"subtitle:{subtitle}")
+    subtitle_path = os.path.join(TTS_SUBTITLE_DIR, task_id + ".vtt")
+    try:
+        with open(subtitle_path, "w", encoding="utf-8") as subtitle_file:
+            subtitle_file.write(subtitle)
+    except Exception:
+        # If logging fails, continue without interrupting TTS
         pass
 
 
@@ -314,17 +398,6 @@ class Layout:
             y_min=-scene.camera.frame_height / 2.0,
             y_max=scene.camera.frame_height / 2.0,
         ))
-
-
-class Title(Text):
-    def __init__(self, *args, **kwargs):
-        if 'font_weight' in kwargs and 'weight' not in kwargs:
-            kwargs['weight'] = kwargs.pop('font_weight')
-
-        if 'weight' not in kwargs:
-            kwargs['weight'] = BOLD
-
-        super().__init__(*args, **kwargs)
 
 
 def make_circle_on_axes(axes: Axes, R: float, **kwargs) -> VMobject:

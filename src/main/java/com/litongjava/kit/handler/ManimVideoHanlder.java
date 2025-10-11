@@ -181,7 +181,7 @@ public class ManimVideoHanlder {
     }
 
     String figure = null;
-    UploadFile figureFile = request.getUploadFile("code");
+    UploadFile figureFile = request.getUploadFile("figure");
     if (figureFile != null) {
       figure = new String(figureFile.getData());
     }
