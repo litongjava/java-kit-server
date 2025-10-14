@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.litongjava.context.BootConfiguration;
 import com.litongjava.kit.handler.CmdHanlder;
+import com.litongjava.kit.handler.DataDeleteHandler;
 import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
@@ -68,6 +69,9 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
 
+      DataDeleteHandler dataDeleteHandler = new DataDeleteHandler();
+      r.add("/delete", dataDeleteHandler);
+      
       ScriptsHandler scriptsHandler = new ScriptsHandler();
       r.add("/scripts/**", scriptsHandler::index);
 

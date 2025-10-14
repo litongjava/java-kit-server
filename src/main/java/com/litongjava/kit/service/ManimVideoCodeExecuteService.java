@@ -40,10 +40,14 @@ public class ManimVideoCodeExecuteService {
     if (!scriptDir.exists()) {
       scriptDir.mkdirs();
     }
-    String figurePath = scriptSessionFolder + File.separator + pdgp_filename;
-    FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
 
+    String figurePath = scriptSessionFolder + File.separator + pdgp_filename;
     code = code.replace(pdgp_filename, figurePath);
+    if (figure != null) {
+      FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
+      log.info("write figure json to :{}", figurePath);
+    }
+
     String scriptPath = scriptSessionFolder + File.separator + taskId + ".py";
     FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
 
