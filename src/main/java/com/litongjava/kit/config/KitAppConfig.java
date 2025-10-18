@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.litongjava.context.BootConfiguration;
+import com.litongjava.kit.handler.BlackIpHandler;
 import com.litongjava.kit.handler.CmdHanlder;
 import com.litongjava.kit.handler.DataDeleteHandler;
 import com.litongjava.kit.handler.DownloadVideoHandler;
@@ -69,12 +70,10 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
-      
-      
 
       DataDeleteHandler dataDeleteHandler = new DataDeleteHandler();
       r.add("/delete", dataDeleteHandler);
-      
+
       ScriptsHandler scriptsHandler = new ScriptsHandler();
       r.add("/scripts/**", scriptsHandler::index);
 
@@ -84,10 +83,9 @@ public class KitAppConfig implements BootConfiguration {
       VideoWaterHandler videoWaterHandler = new VideoWaterHandler();
       r.add("/video/download/water", videoWaterHandler::index);
       r.add("/video/exists", videoWaterHandler::exists);
-      
+
       DownloadVideoHandler downloadVideoHandler = new DownloadVideoHandler();
       r.add("/video/download", downloadVideoHandler::index);
-      
 
       YoutubeHandler youtubeHandler = new YoutubeHandler();
       r.add("/youtube/download/mp3", youtubeHandler::downloadMp3);
@@ -104,6 +102,9 @@ public class KitAppConfig implements BootConfiguration {
       McpCoderServer mcpCoderServer = new McpCoderServer();
       McpHandler mcpCoderHandler = new McpHandler(mcpCoderServer);
       r.add("/mcp", mcpCoderHandler);
+
+      BlackIpHandler blackIpHandler = new BlackIpHandler();
+      r.add("/black/ip/add", blackIpHandler);
 //      WebSocketRouter router = TioBootServer.me().getWebSocketRouter();
 //      router.add("/mcp/coder", mcpCoderHandler);
     }

@@ -46,8 +46,8 @@ public class FfmpegUtils {
 
     long id = SnowflakeIdUtils.id();
     log.info("id:{} cmd:{}", id, String.join(" ", command));
-    File file = new File(id + "");
-    ProcessResult result = ProcessUtils.execute(file, id, pb, 3 * 60);
+    File file = new File("ffmpeg_logs" + File.separator + id);
+    ProcessResult result = ProcessUtils.execute(file, id, pb, 10 * 60);
     return result;
   }
 }
