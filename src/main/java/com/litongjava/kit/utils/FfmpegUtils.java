@@ -5,6 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.litongjava.tio.utils.commandline.ProcessResult;
+import com.litongjava.tio.utils.commandline.ProcessUtils;
+import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class FfmpegUtils {
 
   public static final String LOG_FOLDER = "ffmpeg_logs";
@@ -23,7 +30,7 @@ public class FfmpegUtils {
    * @param outputFile 输出 mp4 文件路径
    * @return FFmpeg 执行退出码（0 表示成功）
    */
-  public static int m3u82Mp4(String inputFile, String outputFile) throws IOException, InterruptedException {
+  public static ProcessResult m3u82Mp4(String inputFile, String outputFile) throws IOException, InterruptedException {
 
     List<String> command = new ArrayList<>();
     command.add("ffmpeg");
@@ -35,17 +42,12 @@ public class FfmpegUtils {
     command.add("copy");
     command.add(outputFile);
 
-    System.out.println("cmd: " + String.join(" ", command));
-
     ProcessBuilder pb = new ProcessBuilder(command);
 
-    // 日志输出
-    File stdoutFile = new File(LOG_FOLDER, "ffmpeg_stdout.log");
-    File stderrFile = new File(LOG_FOLDER, "ffmpeg_stderr.log");
-    pb.redirectOutput(ProcessBuilder.Redirect.to(stdoutFile));
-    pb.redirectError(ProcessBuilder.Redirect.to(stderrFile));
-
-    Process process = pb.start();
-    return process.waitFor();
+    long id = SnowflakeIdUtils.id();
+    log.info("id:{} cmd:{}", id, String.join(" ", command));
+    File file = new File(id + "");
+    ProcessResult result = ProcessUtils.execute(file, id, pb, 3 * 60);
+    return result;
   }
 }

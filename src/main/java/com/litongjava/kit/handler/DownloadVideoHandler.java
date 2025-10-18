@@ -9,6 +9,7 @@ import com.litongjava.tio.boot.utils.HttpFileDataUtils;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
 import com.litongjava.tio.http.server.util.CORSUtils;
+import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.http.ContentTypeUtils;
 import com.litongjava.tio.utils.hutool.FilenameUtils;
 import com.litongjava.tio.utils.hutool.StrUtil;
@@ -54,7 +55,8 @@ public class DownloadVideoHandler {
       if (!mp4File.exists()) {
         try {
           log.info("检测到 m3u8 文件，开始转换：{} → {}", targetFile, mp4FilePath);
-          int code = FfmpegUtils.m3u82Mp4(targetFile, mp4FilePath);
+          ProcessResult result = FfmpegUtils.m3u82Mp4(targetFile, mp4FilePath);
+          int code = result.getExitCode();
           if (code != 0 || !mp4File.exists()) {
             response.setStatus(500);
             return response.setBodyString("ffmpeg 转换失败，退出码=" + code);
@@ -71,7 +73,7 @@ public class DownloadVideoHandler {
       file = new File(targetFile);
       suffix = "mp4";
     }
-    
+
     // 生成 ETag
     long fileLength = file.length();
     long lastModified = file.lastModified();
