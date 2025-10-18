@@ -6,6 +6,7 @@ import java.util.List;
 import com.litongjava.context.BootConfiguration;
 import com.litongjava.kit.handler.CmdHanlder;
 import com.litongjava.kit.handler.DataDeleteHandler;
+import com.litongjava.kit.handler.DownloadVideoHandler;
 import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
@@ -68,6 +69,8 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
+      
+      
 
       DataDeleteHandler dataDeleteHandler = new DataDeleteHandler();
       r.add("/delete", dataDeleteHandler);
@@ -81,6 +84,10 @@ public class KitAppConfig implements BootConfiguration {
       VideoWaterHandler videoWaterHandler = new VideoWaterHandler();
       r.add("/video/download/water", videoWaterHandler::index);
       r.add("/video/exists", videoWaterHandler::exists);
+      
+      DownloadVideoHandler downloadVideoHandler = new DownloadVideoHandler();
+      r.add("/video/download", downloadVideoHandler::index);
+      
 
       YoutubeHandler youtubeHandler = new YoutubeHandler();
       r.add("/youtube/download/mp3", youtubeHandler::downloadMp3);
