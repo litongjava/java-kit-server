@@ -35,7 +35,6 @@ public class DownloadVideoHandler {
     }
 
     log.info("path:{}", path);
-
     // 1 ️获取目标文件
     String targetFile = "." + path;
     File file = new File(targetFile);
