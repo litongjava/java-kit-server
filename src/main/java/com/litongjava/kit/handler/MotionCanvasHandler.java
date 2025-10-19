@@ -16,7 +16,7 @@ import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MotionCanvasHanlder implements HttpRequestHandler {
+public class MotionCanvasHandler implements HttpRequestHandler {
   private MotionCanvasCodeExecuteService srv = Aop.get(MotionCanvasCodeExecuteService.class);
 
   @Override
