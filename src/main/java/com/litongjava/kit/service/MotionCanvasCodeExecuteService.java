@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import com.jfinal.kit.Kv;
 import com.litongjava.kit.vo.VideoCodeInput;
+import com.litongjava.template.TemplateEngine;
 import com.litongjava.tio.core.ChannelContext;
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.commandline.ProcessUtils;
@@ -24,7 +26,10 @@ public class MotionCanvasCodeExecuteService {
 
     String templatePathStr = "motion-canvas/packages/work-template";
     String projectPathStr = "motion-canvas/packages/work-template-" + sessionId;
+    String sceneTsStr = projectPathStr + "/src/scenes/" + taskName + ".tsx";
+    String projectTsStr = projectPathStr + "/src/project.ts";
     String projectJsStr = projectPathStr + "/dist/src/project.js";
+
     File projectPath = new File(projectPathStr);
     if (!projectPath.exists()) {
       try {
@@ -35,6 +40,10 @@ public class MotionCanvasCodeExecuteService {
       }
     }
 
+    FileUtil.writeString(code, sceneTsStr);
+    String projectTsContent = TemplateEngine.renderToString("project.ts", Kv.by("scene_name", taskName));
+    FileUtil.writeString(projectTsContent, projectTsStr);
+    
     // 执行脚本
     ProcessResult result = execute(projectPath, sessionId + "_" + taskName, code, timeout);
     result.setTaskId(taskId);
