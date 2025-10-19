@@ -25,27 +25,32 @@ public class MotionCanvasCodeExecuteService {
     int timeout = input.getTimeout();
 
     String templatePathStr = "motion-canvas/packages/work-template";
-    String projectPathStr = "motion-canvas/packages/work-template-" + sessionId;
-    String sceneTsStr = projectPathStr + "/src/scenes/" + taskName + ".tsx";
+    String targetSubProjectPathStr = "packages/work-template-" + sessionId;
+    String projectPathStr = "motion-canvas/" + targetSubProjectPathStr;
+    String projectJsonStr = projectPathStr + "/package.json";
     String projectTsStr = projectPathStr + "/src/project.ts";
+    String sceneTsStr = projectPathStr + "/src/scenes/" + taskName + ".tsx";
     String projectJsStr = projectPathStr + "/dist/src/project.js";
 
     File projectPath = new File(projectPathStr);
+
     if (!projectPath.exists()) {
       try {
         FileUtil.copyDirectory(Paths.get(templatePathStr), Paths.get(projectPathStr), true);
+        String projectJsonContent = TemplateEngine.renderToString("package.json", Kv.by("sessionId", sessionId));
+        FileUtil.writeString(projectJsonContent, projectJsonStr);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         return ProcessResult.buildMessage(e.getMessage());
       }
     }
 
-    FileUtil.writeString(code, sceneTsStr);
     String projectTsContent = TemplateEngine.renderToString("project.ts", Kv.by("scene_name", taskName));
     FileUtil.writeString(projectTsContent, projectTsStr);
-    
+
+    FileUtil.writeString(code, sceneTsStr);
     // 执行脚本
-    ProcessResult result = execute(projectPath, sessionId + "_" + taskName, code, timeout);
+    ProcessResult result = execute(projectPath, targetSubProjectPathStr, sessionId + "_" + taskName, timeout);
     result.setTaskId(taskId);
     int exitCode = result.getExitCode();
     log.info("exitCode:{},{}", taskId, exitCode);
@@ -63,14 +68,15 @@ public class MotionCanvasCodeExecuteService {
     return result;
   }
 
-  public static ProcessResult execute(File projectPath, String code, String taskName, int timeout)
+  public static ProcessResult execute(File projectPath, String subProject, String taskName, int timeout)
       throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
-    log.info("osName: {} scriptPath: {}", osName, projectPath);
+    log.info("osName: {} scriptPath: {}", osName, subProject);
     String cmd = "npm run build -w %s";
-    cmd = String.format(cmd, projectPath);
+    cmd = String.format(cmd, subProject);
     log.info("cmd:{}", cmd);
-    ProcessBuilder pb = new ProcessBuilder("npm", "run", "build", "-w", projectPath.toString());
+    ProcessBuilder pb = new ProcessBuilder("npm", "run", "build", "-w", subProject);
+    pb.directory(new File("motion-canvas"));
     ProcessResult result = ProcessUtils.execute(projectPath, taskName, pb, timeout);
     return result;
   }

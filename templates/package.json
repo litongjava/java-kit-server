@@ -1,0 +1,22 @@
+{
+  "name": "@imaginix-inc/motion-canvas-work-template-#(sessionId)",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Basic project template for Motion Canvas",
+  "author": "motion-canvas",
+  "license": "MIT",
+  "main": "src/project.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "@imaginix-inc/motion-canvas-2d": "*",
+    "@imaginix-inc/motion-canvas-core": "*",
+    "@langchain/anthropic": "^0.3.31"
+  },
+  "devDependencies": {
+    "@imaginix-inc/motion-canvas-ui": "*",
+    "@imaginix-inc/motion-canvas-vite-plugin": "*"
+  }
+}
