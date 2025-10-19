@@ -22,18 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MotionCanvasCodeExecuteService {
-  public static final String pdgp_filename = "pgdp-output.json";
-
   public ProcessResult executeCode(VideoCodeInput input, ChannelContext channelContext)
       throws IOException, InterruptedException {
     Long sessionId = input.getSessionId();
     Long taskId = input.getTaskId();
+    String taskName = input.getTaskName();
     String code = input.getCode();
-    String quality = input.getQuality();
     int timeout = input.getTimeout();
-    Long sessionPrt = input.getSessionPrt();
-    String m3u8Path = input.getM3u8Path();
-    String figure = input.getFigure();
 
     String scriptSessionFolder = WorkDirUtils.workingScriptsDir() + File.separator + sessionId;
     File scriptDir = new File(scriptSessionFolder);
@@ -41,20 +36,10 @@ public class MotionCanvasCodeExecuteService {
       scriptDir.mkdirs();
     }
 
-    String figurePath = scriptSessionFolder + File.separator + pdgp_filename;
-    code = code.replace(pdgp_filename, figurePath);
-    if (figure != null) {
-      FileUtil.writeString(figure, figurePath, StandardCharsets.UTF_8.toString());
-      log.info("write figure json to :{}", figurePath);
-    }
-
-    String scriptPath = scriptSessionFolder + File.separator + taskId + ".py";
-    FileUtil.writeString(code, scriptPath, StandardCharsets.UTF_8.toString());
-
-    List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, taskId.toString());
+    String copyCommand = "cp -r motion-canvas/packages/work-template motion-canvas/packages/work-template-" + sessionId;
 
     // 执行脚本
-    ProcessResult result = execute(scriptPath, taskId, timeout, quality);
+    ProcessResult result = execute(taskId, taskName, code, timeout);
     result.setTaskId(taskId);
     // 读取文字
     String textPath = WorkDirUtils.workingMediaDir + File.separator + "tts_text" + File.separator + taskId + ".txt";
@@ -163,59 +148,22 @@ public class MotionCanvasCodeExecuteService {
     return result;
   }
 
-  private List<String> buildVideoFolder(String mediaDir, String scriptFileName) {
-    List<String> videoFolders = new ArrayList<>();
-    String videoDir = mediaDir + File.separator + "videos";
-    videoFolders.add(videoDir + File.separator + "480p30");
-    videoFolders.add(videoDir + File.separator + "480p15");
-    videoFolders.add(videoDir + File.separator + "480p10");
-    videoFolders.add(videoDir + File.separator + "720p30");
-    videoFolders.add(videoDir + File.separator + "720p15");
-    videoFolders.add(videoDir + File.separator + "720p10");
-    videoFolders.add(videoDir + File.separator + "1080p30");
-    videoFolders.add(videoDir + File.separator + "1080p15");
-    videoFolders.add(videoDir + File.separator + "1080p10");
-
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "480p30");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "480p15");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "480p10");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "720p30");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "720p15");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "720p10");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "1080p30");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "1080p15");
-    videoFolders.add(videoDir + File.separator + scriptFileName + File.separator + "1080p10");
-    return videoFolders;
-  }
-
-  public static ProcessResult execute(String scriptPath, long taskId, int timeout, String quality)
+  public static ProcessResult execute(String code, String projectPath, String taskName, int timeout)
       throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
-    log.info("osName: {} scriptPath: {}", osName, scriptPath);
-    // 获取脚本所在目录
-    File scriptFile = new File(scriptPath);
-    File scriptDir = scriptFile.getParentFile();
-
+    log.info("osName: {} scriptPath: {}", osName, projectPath);
     // manim -ql --fps 10 --progress_bar none --verbosity WARNING --media_dir
     // cache/01 --output_file CombinedScene scripts/01/script.py CombinedScene
     String cmd = "manim -q%s --fps 10  --progress_bar none --verbosity WARNING %s -a";
-    cmd = String.format(cmd, quality, scriptPath);
+    cmd = String.format(cmd, taskName, projectPath);
     log.info("cmd:{}", cmd);
-    File runSh = new File(scriptDir, taskId + "_run.sh");
-    FileUtil.writeString(cmd, runSh);
+    
 
-    ProcessBuilder pb = new ProcessBuilder("manim", "-q" + quality, "--fps", "10",
-        //
-        "--progress_bar", "none", "--verbosity", "WARNING",
-        //
-        scriptPath, "-a");
+    ProcessBuilder pb = new ProcessBuilder("npm", "run", "build", "-w", projectPath);
 
     String workingDir = WorkDirUtils.getWorkingDir();
-    pb.environment().put("PYTHONIOENCODING", "utf-8");
-    pb.environment().put("PYTHONPATH", workingDir);
-    pb.environment().put("TASK_ID", String.valueOf(taskId));
 
-    ProcessResult result = ProcessUtils.execute(scriptDir, taskId, pb, timeout);
+    ProcessResult result = ProcessUtils.execute(projectPath, taskName, pb, timeout);
 
     return result;
   }

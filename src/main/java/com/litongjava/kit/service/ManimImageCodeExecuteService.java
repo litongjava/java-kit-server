@@ -66,8 +66,8 @@ public class ManimImageCodeExecuteService {
     pb.environment().put("PYTHONIOENCODING", "utf-8");
     pb.environment().put("PYTHONPATH", workingDir);
     pb.environment().put("TASK_ID", String.valueOf(taskId));
-    
-    ProcessResult result = ProcessUtils.execute(scriptDir, taskId, pb, 120);
+
+    ProcessResult result = ProcessUtils.execute(scriptDir, taskId + "", pb, 120);
 
     return result;
   }

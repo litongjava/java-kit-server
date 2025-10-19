@@ -54,7 +54,7 @@ public class ManimVideoCodeExecuteService {
     List<String> videoFolders = buildVideoFolder(WorkDirUtils.workingMediaDir, taskId.toString());
 
     // 执行脚本
-    ProcessResult result = execute(scriptPath, taskId, timeout, quality);
+    ProcessResult result = execute(scriptPath, taskId + "", timeout, quality);
     result.setTaskId(taskId);
     // 读取文字
     String textPath = WorkDirUtils.workingMediaDir + File.separator + "tts_text" + File.separator + taskId + ".txt";
@@ -188,7 +188,7 @@ public class ManimVideoCodeExecuteService {
     return videoFolders;
   }
 
-  public static ProcessResult execute(String scriptPath, long taskId, int timeout, String quality)
+  public static ProcessResult execute(String scriptPath, String taskName, int timeout, String quality)
       throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, scriptPath);
@@ -201,7 +201,7 @@ public class ManimVideoCodeExecuteService {
     String cmd = "manim -q%s --fps 10  --progress_bar none --verbosity WARNING %s -a";
     cmd = String.format(cmd, quality, scriptPath);
     log.info("cmd:{}", cmd);
-    File runSh = new File(scriptDir, taskId + "_run.sh");
+    File runSh = new File(scriptDir, taskName + "_run.sh");
     FileUtil.writeString(cmd, runSh);
 
     ProcessBuilder pb = new ProcessBuilder("manim", "-q" + quality, "--fps", "10",
@@ -213,9 +213,9 @@ public class ManimVideoCodeExecuteService {
     String workingDir = WorkDirUtils.getWorkingDir();
     pb.environment().put("PYTHONIOENCODING", "utf-8");
     pb.environment().put("PYTHONPATH", workingDir);
-    pb.environment().put("TASK_ID", String.valueOf(taskId));
+    pb.environment().put("TASK_ID", String.valueOf(taskName));
 
-    ProcessResult result = ProcessUtils.execute(scriptDir, taskId, pb, timeout);
+    ProcessResult result = ProcessUtils.execute(scriptDir, taskName, pb, timeout);
 
     return result;
   }
