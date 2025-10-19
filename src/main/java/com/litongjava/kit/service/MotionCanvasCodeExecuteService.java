@@ -21,7 +21,7 @@ import com.litongjava.tio.utils.path.WorkDirUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManimVideoCodeExecuteService {
+public class MotionCanvasCodeExecuteService {
   public static final String pdgp_filename = "pgdp-output.json";
 
   public ProcessResult executeCode(VideoCodeInput input, ChannelContext channelContext)

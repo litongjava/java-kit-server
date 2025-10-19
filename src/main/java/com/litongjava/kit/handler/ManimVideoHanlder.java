@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.kit.service.ManimVideoCodeExecuteService;
-import com.litongjava.kit.vo.ManimVideoCodeInput;
+import com.litongjava.kit.vo.VideoCodeInput;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;
@@ -191,8 +191,8 @@ public class ManimVideoHanlder {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
-    ManimVideoCodeInput manimVideoCodeInput = new ManimVideoCodeInput(sessionId, id, code, figure, quality, timeout,
-        stream, session_prt, m3u8Path);
+    VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code, quality, timeout, stream, session_prt,
+        m3u8Path, figure);
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {
