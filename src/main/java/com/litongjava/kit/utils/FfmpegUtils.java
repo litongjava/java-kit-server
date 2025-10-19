@@ -64,7 +64,7 @@ public class FfmpegUtils {
     long id = SnowflakeIdUtils.id();
     log.info("id:{} cmd:{}", id, String.join(" ", command));
     File logDir = new File(LOG_FOLDER, String.valueOf(id));
-    return ProcessUtils.execute(logDir, id, pb, 10 * 60);
+    return ProcessUtils.execute(logDir, id + "", pb, 10 * 60);
   }
 
   /** 检测 MP4 是否“可播放”：有视频流 && 时长 > 0 */
@@ -95,7 +95,7 @@ public class FfmpegUtils {
     long id = SnowflakeIdUtils.id();
     File logDir = new File(LOG_FOLDER, String.valueOf(id));
     ProcessBuilder pb = new ProcessBuilder(command);
-    ProcessResult pr = ProcessUtils.execute(logDir, id, pb, timeoutSeconds);
+    ProcessResult pr = ProcessUtils.execute(logDir, id + "", pb, timeoutSeconds);
     if (pr.getExitCode() != 0) {
       // 将 stderr 合并到异常信息中，方便排查
       throw new IOException("Command failed, exit=" + pr.getExitCode() + ", cmd=" + String.join(" ", command)
