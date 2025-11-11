@@ -14,6 +14,7 @@ import com.litongjava.kit.handler.ManimImageHandler;
 import com.litongjava.kit.handler.ManimVideoHanlder;
 import com.litongjava.kit.handler.McpHandler;
 import com.litongjava.kit.handler.MomeryHandler;
+import com.litongjava.kit.handler.MotionCanvasFinishHandler;
 import com.litongjava.kit.handler.MotionCanvasHandler;
 import com.litongjava.kit.handler.PingHandler;
 import com.litongjava.kit.handler.PythonHanlder;
@@ -63,13 +64,15 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/manim/start", manimHanlder::start);
       r.add("/manim/finish", manimHanlder::finish);
       r.add("/manim", manimHanlder::index);
-      
-      
+
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
 
       MotionCanvasHandler motionCanvasHandler = new MotionCanvasHandler();
       r.add("/motion-canvas", motionCanvasHandler);
+
+      MotionCanvasFinishHandler motionCanvasFinishHandler = new MotionCanvasFinishHandler();
+      r.add("/motion-canvas/finish", motionCanvasFinishHandler);
       HttpFileDataHandler dataHandler = new HttpFileDataHandler(false);
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);

@@ -8,7 +8,7 @@
   "main": "src/project.ts",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build"
+    "build": "node ../../packages/verify-tmp/scripts/check-types.mts && vite build"
   },
   "dependencies": {
     "@imaginix-inc/motion-canvas-2d": "*",
