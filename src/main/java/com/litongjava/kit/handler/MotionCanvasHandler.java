@@ -1,5 +1,8 @@
 package com.litongjava.kit.handler;
 
+import java.util.concurrent.locks.Lock;
+
+import com.google.common.util.concurrent.Striped;
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.kit.service.MotionCanvasCodeExecuteService;
 import com.litongjava.kit.vo.VideoCodeInput;
@@ -18,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MotionCanvasHandler implements HttpRequestHandler {
   private MotionCanvasCodeExecuteService srv = Aop.get(MotionCanvasCodeExecuteService.class);
+  private static final Striped<Lock> locks = Striped.lock(1024);
 
   @Override
   public HttpResponse handle(HttpRequest request) throws Exception {
@@ -69,6 +73,9 @@ public class MotionCanvasHandler implements HttpRequestHandler {
     }
 
     VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code_name, code, timeout);
+    // 同一时间,只能写入一个sessionId
+    Lock lock = locks.get(sessionId);
+    lock.lock();
     try {
       ProcessResult executeScript = srv.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {
@@ -79,6 +86,8 @@ public class MotionCanvasHandler implements HttpRequestHandler {
       log.error(e.getMessage(), e);
       response.setStatus(500);
       response.body(e.getMessage());
+    } finally {
+      lock.unlock();
     }
     return response;
   }
