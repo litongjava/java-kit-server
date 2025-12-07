@@ -45,7 +45,7 @@ public class McpCoderServer extends McpServer {
 
     // run_python
     RegisteredTool runPython = McpToolRegistry.builder("run_python").title("run python")
-        .description("在子进程中执行一段 Python 代码，返回 stdout/stderr/exit_code,支持联网").addStringProperty("code", "Code", true)
+        .description("在子进程中执行一段 donghua代码，返回 stdout/stderr/exit_code,支持联网").addStringProperty("code", "Code", true)
         .addIntegerProperty("timeout", "Timeout", 30, false)
         .addNullableProperty("stdin", "Stdin", "string", null, false)
         .addBooleanProperty("use_isolated", "Use Isolated", true, false).handler(this::handleRunPython).build();

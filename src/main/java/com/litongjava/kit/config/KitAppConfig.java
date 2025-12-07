@@ -11,6 +11,7 @@ import com.litongjava.kit.handler.DownloadVideoHandler;
 import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
+import com.litongjava.kit.handler.ManimVideoFinishHanlder;
 import com.litongjava.kit.handler.ManimVideoHanlder;
 import com.litongjava.kit.handler.McpHandler;
 import com.litongjava.kit.handler.MomeryHandler;
@@ -62,21 +63,26 @@ public class KitAppConfig implements BootConfiguration {
 
       ManimVideoHanlder manimHanlder = new ManimVideoHanlder();
       r.add("/manim/start", manimHanlder::start);
-      r.add("/manim/finish", manimHanlder::finish);
+
       r.add("/manim", manimHanlder::index);
+
+      ManimVideoFinishHanlder manimVideoFinishHanlder = new ManimVideoFinishHanlder();
+      r.add("/manim/finish", manimVideoFinishHanlder);
 
       ManimImageHandler manimImageHandler = new ManimImageHandler();
       r.add("/manim/image", manimImageHandler::index);
 
       MotionCanvasHandler motionCanvasHandler = new MotionCanvasHandler();
-      r.add("/motion-canvas", motionCanvasHandler);
+      r.add("/motion-canvas/run", motionCanvasHandler);
 
       MotionCanvasFinishHandler motionCanvasFinishHandler = new MotionCanvasFinishHandler();
       r.add("/motion-canvas/finish", motionCanvasFinishHandler);
+
       HttpFileDataHandler dataHandler = new HttpFileDataHandler(false);
       r.add("/data/**", dataHandler::index);
       r.add("/cache/**", dataHandler::index);
       r.add("/media/**", dataHandler::index);
+      r.add("/motion-canvas/**", dataHandler::index);
 
       DataDeleteHandler dataDeleteHandler = new DataDeleteHandler();
       r.add("/delete", dataDeleteHandler);

@@ -51,7 +51,7 @@ public class MotionCanvasCodeExecuteService {
 
     FileUtil.writeString(code, sceneTsStr);
     // 执行脚本
-    ProcessResult result = execute(projectPath, targetSubProjectPathStr, sessionId + "_" + taskName, timeout);
+    ProcessResult result = executeFinish(projectPath, targetSubProjectPathStr, sessionId + "_" + taskName, timeout);
     result.setTaskId(taskId);
     int exitCode = result.getExitCode();
     log.info("exitCode:{},{}", taskId, exitCode);
@@ -69,7 +69,7 @@ public class MotionCanvasCodeExecuteService {
     return result;
   }
 
-  public static ProcessResult execute(File projectPath, String subProject, String taskName, int timeout)
+  public static ProcessResult executeFinish(File projectPath, String subProject, String taskName, int timeout)
       throws IOException, InterruptedException {
     String osName = System.getProperty("os.name").toLowerCase();
     log.info("osName: {} scriptPath: {}", osName, subProject);
@@ -78,6 +78,26 @@ public class MotionCanvasCodeExecuteService {
     log.info("cmd:{}", cmd);
     ProcessBuilder pb = new ProcessBuilder("npm", "run", "build", "-w", subProject);
     pb.directory(new File("motion-canvas"));
+    ProcessResult result = ProcessUtils.execute(projectPath, taskName, pb, timeout);
+    return result;
+  }
+
+  public static ProcessResult executeInspector(File projectPath, String targetSubProjectPathStr, String taskName, int timeout)
+      throws IOException, InterruptedException {
+    String osName = System.getProperty("os.name").toLowerCase();
+    log.info("osName: {} scriptPath: {}", osName, targetSubProjectPathStr);
+
+    String projectPathStr = targetSubProjectPathStr + "/dist/src/project.js";
+    String pngPathStr = targetSubProjectPathStr + "/cover.png";
+
+    String cmd = "node packages/project-inspector/lib/index.js --json --frame-output %s %s";
+    cmd = String.format(cmd, pngPathStr, projectPathStr);
+    log.info("cmd:{}", cmd);
+    ProcessBuilder pb = new ProcessBuilder("node", "packages/project-inspector/lib/index.js",
+        //
+        "--json", "--frame-output", pngPathStr, projectPathStr);
+    pb.directory(new File("motion-canvas"));
+    pb.environment().put("PUPPETEER_EXECUTABLE_PATH", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
     ProcessResult result = ProcessUtils.execute(projectPath, taskName, pb, timeout);
     return result;
   }
@@ -102,7 +122,7 @@ public class MotionCanvasCodeExecuteService {
 
     // 执行脚本
     String taskName = "finish_" + sessionId;
-    ProcessResult result = execute(projectPath, targetSubProjectPathStr, taskName, 10 * 1000);
+    ProcessResult result = executeFinish(projectPath, targetSubProjectPathStr, taskName, 10 * 1000);
     long taskId = SnowflakeIdUtils.id();
     result.setTaskId(taskId);
     int exitCode = result.getExitCode();
@@ -115,9 +135,14 @@ public class MotionCanvasCodeExecuteService {
         String content = FileUtil.readString(projectJs);
         result.setOutput(content);
       }
+
+      ProcessResult inspectorResult = executeInspector(projectPath, targetSubProjectPathStr, taskName, 10 * 1000);
+      String stdOut = inspectorResult.getStdOut();
+      result.setJson(stdOut);
     } else {
       log.error("Failed to run task:{} {}", projectPath, taskName);
     }
+
     return result;
   }
 }

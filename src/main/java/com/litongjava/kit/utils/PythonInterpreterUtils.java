@@ -41,7 +41,7 @@ public class PythonInterpreterUtils {
     ProcessBuilder processBuilder = null;
 
     try {
-      // 先检测 python 是否存在
+      // 先检测 donghua是否存在
       Process checkPython = null;
       if (osName.contains("windows")) {
         checkPython = new ProcessBuilder("where", "python").start();
@@ -51,10 +51,10 @@ public class PythonInterpreterUtils {
 
       int exitCode = checkPython.waitFor();
       if (exitCode == 0) {
-        // python 存在
+        // donghua存在
         processBuilder = new ProcessBuilder("python", mainPy);
       } else {
-        // python 不存在，尝试 python3
+        // donghua不存在，尝试 python3
         processBuilder = new ProcessBuilder("python3", mainPy);
       }
 

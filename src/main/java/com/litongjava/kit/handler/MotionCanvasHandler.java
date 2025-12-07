@@ -81,7 +81,6 @@ public class MotionCanvasHandler implements HttpRequestHandler {
       if (executeScript != null) {
         response.setJson(executeScript);
       }
-
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       response.setStatus(500);

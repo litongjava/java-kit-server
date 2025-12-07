@@ -15,8 +15,6 @@ import com.litongjava.tio.http.common.HttpResponse;
 import com.litongjava.tio.http.common.UploadFile;
 import com.litongjava.tio.http.server.util.CORSUtils;
 import com.litongjava.tio.utils.commandline.ProcessResult;
-import com.litongjava.tio.utils.hutool.FilenameUtils;
-import com.litongjava.tio.utils.json.JsonUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,67 +61,6 @@ public class ManimVideoHanlder {
 
     response.setJson(processResult);
     return response;
-  }
-
-  public HttpResponse finish(HttpRequest request) {
-    HttpResponse response = TioRequestContext.getResponse();
-    CORSUtils.enableCORS(response);
-
-    Long session_prt = request.getLong("session_prt");
-    ProcessResult processResult = new ProcessResult();
-    if (session_prt == null) {
-      processResult.setStdErr("m3u8_path can not be empty");
-      return response.setJson(processResult);
-    }
-    String m3u8Path = request.getString("m3u8_path");
-    if (m3u8Path == null) {
-      processResult.setStdErr("m3u8_path can not be empty");
-      return response.setJson(processResult);
-    } else {
-      m3u8Path = "." + m3u8Path;
-    }
-    String videos = request.getString("videos");
-    log.info("session_prt:{},m3u8Path:{},videos:{}", session_prt, m3u8Path, videos);
-    File file = new File(m3u8Path);
-    if (file.exists()) {
-      log.info("finishPersistentHls:{}", session_prt);
-      NativeMedia.finishPersistentHls(session_prt, m3u8Path);
-    } else {
-      log.info("freeHlsSession:{}", session_prt);
-      NativeMedia.freeHlsSession(session_prt);
-    }
-
-    if (videos != null) {
-      String subPath = FilenameUtils.getSubPath(m3u8Path);
-      String outputMp4Path = subPath + "/main.mp4";
-      String[] split = videos.split(",");
-      String[] mp4FileList = new String[split.length];
-      String[] wavFileList = new String[split.length];
-      for (int i = 0; i < split.length; i++) {
-        mp4FileList[i] = "." + split[i].replace(".m3u8", ".mp4");
-        wavFileList[i] = "." + split[i].replace(".m3u8", ".wav");
-      }
-      log.info("merge:{}", JsonUtils.toJson(mp4FileList));
-      boolean merged = NativeMedia.merge(mp4FileList, outputMp4Path);
-      log.info("merged:{}", merged);
-      if (merged) {
-        double videoLength = NativeMedia.getVideoLength(outputMp4Path);
-        log.info("video_length:{} {}", outputMp4Path, videoLength);
-        processResult.setVideo_length(videoLength);
-        double delta = videoLength - 120d;
-        String mp3Path = null;
-        if (delta > 0) {
-          double insertion_silence_duration = delta / 100;
-          mp3Path = NativeMedia.toMp3ForSilence(outputMp4Path, insertion_silence_duration);
-        } else {
-          mp3Path = NativeMedia.toMp3(outputMp4Path);
-        }
-        processResult.setAudio(mp3Path);
-        log.info("mp3:{}", mp3Path);
-      }
-    }
-
-    return response.setJson(processResult);
   }
 
   public HttpResponse index(HttpRequest request) {
