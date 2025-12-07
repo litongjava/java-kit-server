@@ -28,10 +28,10 @@ public class ManimVideoFinishHanlder implements HttpRequestHandler {
 
     Long session_prt = request.getLong("session_prt");
     ProcessResult processResult = new ProcessResult();
-    if (session_prt == null) {
-      processResult.setStdErr("m3u8_path can not be empty");
-      return response.setJson(processResult);
-    }
+//    if (session_prt == null) {
+//      processResult.setStdErr("session_prt can not be empty");
+//      return response.setJson(processResult);
+//    }
     String m3u8Path = request.getString("m3u8_path");
     if (m3u8Path == null) {
       processResult.setStdErr("m3u8_path can not be empty");

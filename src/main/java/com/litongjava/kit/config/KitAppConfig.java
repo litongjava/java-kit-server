@@ -12,7 +12,8 @@ import com.litongjava.kit.handler.GzipBombTestHandler;
 import com.litongjava.kit.handler.HlsHandler;
 import com.litongjava.kit.handler.ManimImageHandler;
 import com.litongjava.kit.handler.ManimVideoFinishHanlder;
-import com.litongjava.kit.handler.ManimVideoHanlder;
+import com.litongjava.kit.handler.ManimVideoRunHanlder;
+import com.litongjava.kit.handler.ManimVideoStartHanlder;
 import com.litongjava.kit.handler.McpHandler;
 import com.litongjava.kit.handler.MomeryHandler;
 import com.litongjava.kit.handler.MotionCanvasFinishHandler;
@@ -61,10 +62,11 @@ public class KitAppConfig implements BootConfiguration {
       PythonHanlder pythonHanlder = new PythonHanlder();
       r.add("/python", pythonHanlder::index);
 
-      ManimVideoHanlder manimHanlder = new ManimVideoHanlder();
-      r.add("/manim/start", manimHanlder::start);
+      ManimVideoStartHanlder manimVideoStartHanlder = new ManimVideoStartHanlder();
+      r.add("/manim/start", manimVideoStartHanlder);
 
-      r.add("/manim", manimHanlder::index);
+      ManimVideoRunHanlder manimHanlder = new ManimVideoRunHanlder();
+      r.add("/manim/run", manimHanlder);
 
       ManimVideoFinishHanlder manimVideoFinishHanlder = new ManimVideoFinishHanlder();
       r.add("/manim/finish", manimVideoFinishHanlder);
