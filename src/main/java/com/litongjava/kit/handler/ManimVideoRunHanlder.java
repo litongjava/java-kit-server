@@ -61,6 +61,8 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
       quality = "l";
     }
 
+    String storagePlatform = request.getHeader("storage-platform");
+
     log.info("session_id:{},session_prt={},m3u8Path={},code_id={},code_timeout={},quality={}", sessionId, session_prt, m3u8Path, code_id,
         code_timeout, quality);
     if (stream == null) {
@@ -85,7 +87,9 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
-    VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code, quality, timeout, stream, session_prt, m3u8Path, figure);
+    VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code, quality, timeout, stream, session_prt, m3u8Path, figure,
+        storagePlatform);
+    
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {

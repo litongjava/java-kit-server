@@ -92,29 +92,7 @@ public class ManimVideoCodeExecuteService {
         found = true;
         File[] mp4Files = videoDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp4"));
 
-        String videoFilePath = null;
-        if (mp4Files.length > 1) {
-          Arrays.sort(mp4Files, Comparator.comparing(File::getName));
-          String[] mp4FilePaths = new String[mp4Files.length];
-          List<String> imagesFilePaths = new ArrayList<>(mp4Files.length);
-
-          for (int i = 0; i < mp4Files.length; i++) {
-            File mp4File = mp4Files[i];
-            String mp4Path = mp4File.getAbsolutePath();
-            String outputJpgPath = dataHlsVideoDir + "/" + mp4File.getName() + ".jpg";
-            int saveExitCode = NativeMedia.saveLastFrame(mp4Path, outputJpgPath);
-            if (saveExitCode == 0) {
-              imagesFilePaths.add(outputJpgPath.replace("./", "/"));
-            }
-            mp4FilePaths[i] = mp4Path;
-          }
-          result.setImages(imagesFilePaths);
-          videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
-          NativeMedia.merge(mp4FilePaths, videoFilePath);
-        } else {
-          // 必须返回相对路径
-          videoFilePath = videoFolder + File.separator + mp4Files[0].getName();
-        }
+        String videoFilePath = buildVideoFilePath(result, dataHlsVideoDir, videoFolder, mp4Files);
 
         file = new File(videoFilePath);
         if (file.exists()) {
@@ -161,6 +139,33 @@ public class ManimVideoCodeExecuteService {
       log.error("Failed to run task:{}", scriptPath);
     }
     return result;
+  }
+
+  private String buildVideoFilePath(ProcessResult result, String dataHlsVideoDir, String videoFolder, File[] mp4Files) {
+    String videoFilePath = null;
+    if (mp4Files.length > 1) {
+      Arrays.sort(mp4Files, Comparator.comparing(File::getName));
+      String[] mp4FilePaths = new String[mp4Files.length];
+      List<String> imagesFilePaths = new ArrayList<>(mp4Files.length);
+
+      for (int i = 0; i < mp4Files.length; i++) {
+        File mp4File = mp4Files[i];
+        String mp4Path = mp4File.getAbsolutePath();
+        String outputJpgPath = dataHlsVideoDir + "/" + mp4File.getName() + ".jpg";
+        int saveExitCode = NativeMedia.saveLastFrame(mp4Path, outputJpgPath);
+        if (saveExitCode == 0) {
+          imagesFilePaths.add(outputJpgPath.replace("./", "/"));
+        }
+        mp4FilePaths[i] = mp4Path;
+      }
+      result.setImages(imagesFilePaths);
+      videoFilePath = videoFolder + File.separator + "CombinedScene.mp4";
+      NativeMedia.merge(mp4FilePaths, videoFilePath);
+    } else {
+      // 必须返回相对路径
+      videoFilePath = videoFolder + File.separator + mp4Files[0].getName();
+    }
+    return videoFilePath;
   }
 
   private List<String> buildVideoFolder(String mediaDir, String scriptFileName) {

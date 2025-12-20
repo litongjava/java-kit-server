@@ -150,7 +150,7 @@ public class KitAppConfig implements BootConfiguration {
         //
         "openai/**", "/anthropic/**", "/google/**", "/openrouter/**", "/cerebras/**",
         //
-        "/test/**", "/tts", "/subtitle", "/mcp");
+        "/test/**", "/tts", "/api/mv/tts", "/subtitle", "/mcp");
 
     HttpInteceptorConfigure serverInteceptorConfigure = new HttpInteceptorConfigure();
     serverInteceptorConfigure.add(model);

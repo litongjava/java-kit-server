@@ -22,6 +22,7 @@ public class VideoCodeInput {
   private Long sessionPrt;
   private String m3u8Path;
   private String figure;
+  private String storagePlatform;
 
   public VideoCodeInput(Long sessionId, Long codeId, String code_name, String code, Integer code_timeout) {
     this.sessionId = sessionId;
@@ -32,8 +33,8 @@ public class VideoCodeInput {
 
   }
 
-  public VideoCodeInput(Long sessionId, Long id, String code, String quality, Integer timeout, Boolean stream,
-      Long session_prt, String m3u8Path, String figure) {
+  public VideoCodeInput(Long sessionId, Long id, String code, String quality, Integer timeout, Boolean stream, Long session_prt,
+      String m3u8Path, String figure, String storagePlatform) {
     this.sessionId = sessionId;
     this.taskId = id;
     this.code = code;
@@ -43,5 +44,6 @@ public class VideoCodeInput {
     this.sessionPrt = session_prt;
     this.m3u8Path = m3u8Path;
     this.figure = figure;
+    this.storagePlatform = storagePlatform;
   }
 }
