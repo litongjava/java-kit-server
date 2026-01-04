@@ -116,7 +116,7 @@ public class HlsService {
       return RespBodyVo.fail("Session not found");
     }
     HlsSession session = sessionMap.get(sessionId);
-    Kv kv = Kv.by("stream_url", session.getPlayFilePath());
+    Kv kv = Kv.by("stream_url", session.getHls());
     return RespBodyVo.ok(kv);
   }
 
@@ -131,7 +131,7 @@ public class HlsService {
       return RespBodyVo.fail("Session not found");
     }
     HlsSession session = sessionMap.get(sessionId);
-    Kv kv = Kv.by("stream_url", session.getPlayFilePath());
+    Kv kv = Kv.by("stream_url", session.getHls());
     return RespBodyVo.ok(kv);
   }
 
@@ -148,7 +148,7 @@ public class HlsService {
     }
     HlsSession session = sessionMap.get(sessionId);
     session.setFinished(true);
-    String playlistUrl = session.getPlayFilePath();
+    String playlistUrl = session.getHls();
 
     // 将 #EXT-X-ENDLIST 写入文件
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(playlistUrl, true))) {

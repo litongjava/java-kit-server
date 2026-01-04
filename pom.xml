@@ -21,12 +21,18 @@
     <main.class>com.litongjava.kit.JavaKitApp</main.class>
   </properties>
 
+
   <dependencies>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.2.5</version>
+    </dependency>
 
     <dependency>
       <groupId>com.litongjava</groupId>
       <artifactId>tio-boot-admin</artifactId>
-      <version>1.0.8</version>
+      <version>1.0.9</version>
     </dependency>
 
     <dependency>
@@ -52,14 +58,6 @@
       <artifactId>yt-dlp-java</artifactId>
       <version>1.0.0</version>
     </dependency>
-
-    <!-- 日志框架 -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-
 
     <!-- 热加载类加载器 -->
     <dependency>
@@ -130,6 +128,19 @@
       <artifactId>batik-constants</artifactId>
       <version>1.14</version>
     </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>2.17.100</version> <!-- 请使用最新版本 -->
+    </dependency>
+
+    <dependency>
+      <groupId>com.aliyun.oss</groupId>
+      <artifactId>aliyun-sdk-oss</artifactId>
+      <version>3.17.4</version>
+    </dependency>
+
   </dependencies>
 
   <profiles>

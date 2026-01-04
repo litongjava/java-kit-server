@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.litongjava.tio.utils.commandline.ProcessResult;
 import com.litongjava.tio.utils.commandline.ProcessUtils;
+import com.litongjava.tio.utils.environment.EnvUtils;
 import com.litongjava.tio.utils.hutool.FileUtil;
 import com.litongjava.tio.utils.path.WorkDirUtils;
 import com.litongjava.tio.utils.snowflake.SnowflakeIdUtils;
@@ -64,7 +65,16 @@ public class ManimImageCodeExecuteService {
     ProcessBuilder pb = new ProcessBuilder("manim", "-s", "-qh", "--format=png", scriptPath);
     String workingDir = WorkDirUtils.getWorkingDir();
     pb.environment().put("PYTHONIOENCODING", "utf-8");
-    pb.environment().put("PYTHONPATH", workingDir);
+    if (EnvUtils.isDev()) {
+      String str = EnvUtils.getStr("PYTHONPATH");
+      if (str != null) {
+        pb.environment().put("PYTHONPATH", str);
+      } else {
+        pb.environment().put("PYTHONPATH", workingDir);
+      }
+    } else {
+      pb.environment().put("PYTHONPATH", workingDir);
+    }
     pb.environment().put("TASK_ID", String.valueOf(taskId));
 
     ProcessResult result = ProcessUtils.execute(scriptDir, taskId + "", pb, 120);

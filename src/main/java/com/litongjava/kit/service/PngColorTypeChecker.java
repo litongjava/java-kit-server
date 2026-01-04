@@ -1,14 +1,16 @@
 package com.litongjava.kit.service;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Iterator;
+
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.ImageInputStream;
+
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.Iterator;
 
 public class PngColorTypeChecker {
 

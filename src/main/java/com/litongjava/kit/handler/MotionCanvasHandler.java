@@ -23,6 +23,9 @@ public class MotionCanvasHandler implements HttpRequestHandler {
   private MotionCanvasCodeExecuteService srv = Aop.get(MotionCanvasCodeExecuteService.class);
   private static final Striped<Lock> locks = Striped.lock(1024);
 
+  /**
+   * session_id=597359949679382528&code_id=597360053668761600&code_timeout=300
+   */
   @Override
   public HttpResponse handle(HttpRequest request) throws Exception {
 
@@ -31,15 +34,16 @@ public class MotionCanvasHandler implements HttpRequestHandler {
 
     ChannelContext channelContext = request.getChannelContext();
 
-    String code_timeout = request.getHeader("code-timeout");
+    String sessionIdStr = request.getParam("session_id");
+    String code_id = request.getParam("code_id");
+    String code_name = request.getParam("code_name");
+    String code_timeout = request.getParam("code_timeout");
     Integer timeout = null;
     if (code_timeout != null) {
       timeout = Integer.valueOf(code_timeout);
     } else {
       timeout = 590;
     }
-
-    String sessionIdStr = request.getHeader("session-id");
 
     Long sessionId = null;
     if (sessionIdStr != null) {
@@ -48,8 +52,6 @@ public class MotionCanvasHandler implements HttpRequestHandler {
       sessionId = SnowflakeIdUtils.id();
     }
 
-    String code_id = request.getHeader("code-id");
-
     Long id = null;
     if (code_id != null) {
       id = Long.valueOf(code_id);
@@ -57,12 +59,10 @@ public class MotionCanvasHandler implements HttpRequestHandler {
       id = SnowflakeIdUtils.id();
     }
 
-    String code_name = request.getHeader("code-name");
-
     if (code_name == null) {
       code_name = "Scene01";
     }
-    log.info("session_id:{},code_id={},code_timeout={},code_name={}", sessionId, code_id, code_timeout, code_name);
+    log.info("session_id:{},code_id={},code_name={},code_timeout={}", sessionId, code_id, code_name, code_timeout);
 
     String code = null;
     UploadFile uploadFile = request.getUploadFile("code");

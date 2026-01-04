@@ -2,6 +2,8 @@ package com.litongjava.kit.handler;
 
 import com.litongjava.jfinal.aop.Aop;
 import com.litongjava.kit.service.ManimVideoCodeExecuteService;
+import com.litongjava.kit.store.HlsSessionStore;
+import com.litongjava.kit.vo.HlsSession;
 import com.litongjava.kit.vo.VideoCodeInput;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.core.ChannelContext;
@@ -27,18 +29,18 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
 
     ChannelContext channelContext = request.getChannelContext();
     Boolean stream = request.getBoolean("stream");
-    Long session_prt = request.getLong("session_prt");
-    String m3u8Path = request.getString("m3u8_path");
+    String sessionIdStr = request.getParam("session_id");
+    String code_id = request.getParam("code_id");
+    String code_timeout = request.getParam("code_timeout");
+    String storagePlatform = request.getParam("storage_platform");
+    String quality = request.getParam("quality");
 
-    String code_timeout = request.getHeader("code-timeout");
     Integer timeout = null;
     if (code_timeout != null) {
       timeout = Integer.valueOf(code_timeout);
     } else {
       timeout = 590;
     }
-
-    String sessionIdStr = request.getHeader("session-id");
 
     Long sessionId = null;
     if (sessionIdStr != null) {
@@ -47,8 +49,6 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
       sessionId = SnowflakeIdUtils.id();
     }
 
-    String code_id = request.getHeader("code-id");
-
     Long id = null;
     if (code_id != null) {
       id = Long.valueOf(code_id);
@@ -56,14 +56,20 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
       id = SnowflakeIdUtils.id();
     }
 
-    String quality = request.getHeader("quality");
     if (quality == null) {
       quality = "l";
     }
 
-    String storagePlatform = request.getHeader("storage-platform");
+    HlsSession hlsSession = HlsSessionStore.get(sessionId);
 
-    log.info("session_id:{},session_prt={},m3u8Path={},code_id={},code_timeout={},quality={}", sessionId, session_prt, m3u8Path, code_id,
+    String m3u8Path = null;
+    Long session_prt = null;
+    if (hlsSession != null) {
+      m3u8Path = hlsSession.getHls();
+      session_prt = hlsSession.getPrt();
+    }
+
+    log.info("session_id:{},session_prt:{},m3u8Path={},code_id={},code_timeout={},quality={}", sessionId, session_prt, m3u8Path, code_id,
         code_timeout, quality);
     if (stream == null) {
       stream = false;
@@ -87,9 +93,10 @@ public class ManimVideoRunHanlder implements HttpRequestHandler {
       Tio.bSend(channelContext, response);
       response.setSend(false);
     }
+
     VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code, quality, timeout, stream, session_prt, m3u8Path, figure,
         storagePlatform);
-    
+
     try {
       ProcessResult executeScript = manimService.executeCode(manimVideoCodeInput, channelContext);
       if (executeScript != null) {

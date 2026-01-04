@@ -9,13 +9,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class HlsSession {
   private Long sessionId;
-  private String playFilePath;
+  private Long prt;
+  private String hls;
   private boolean finished;
 
   public HlsSession(Long sessionId, String playFilePath) {
     this.sessionId = sessionId;
-    this.playFilePath = playFilePath;
+    this.hls = playFilePath;
     this.finished = false;
+  }
+
+  public HlsSession(String hls, Long ptr) {
+    this.hls = hls;
+    this.prt = ptr;
   }
 
 }

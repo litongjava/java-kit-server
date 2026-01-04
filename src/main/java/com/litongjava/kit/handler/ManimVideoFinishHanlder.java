@@ -1,9 +1,23 @@
 package com.litongjava.kit.handler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
+import com.litongjava.jfinal.aop.Aop;
+import com.litongjava.kit.service.HlsSessionService;
+import com.litongjava.kit.utils.FolderUtils;
+import com.litongjava.kit.utils.PptUtils;
 import com.litongjava.media.NativeMedia;
 import com.litongjava.media.utils.VideoWaterUtils;
+import com.litongjava.tio.boot.admin.services.storage.StorageUploadService;
+import com.litongjava.tio.boot.admin.vo.UploadInput;
+import com.litongjava.tio.boot.admin.vo.UploadResultVo;
 import com.litongjava.tio.boot.http.TioRequestContext;
 import com.litongjava.tio.http.common.HttpRequest;
 import com.litongjava.tio.http.common.HttpResponse;
@@ -26,76 +40,116 @@ public class ManimVideoFinishHanlder implements HttpRequestHandler {
     HttpResponse response = TioRequestContext.getResponse();
     CORSUtils.enableCORS(response);
 
-    Long session_prt = request.getLong("session_prt");
-    ProcessResult processResult = new ProcessResult();
-//    if (session_prt == null) {
-//      processResult.setStdErr("session_prt can not be empty");
-//      return response.setJson(processResult);
-//    }
-    String m3u8Path = request.getString("m3u8_path");
-    if (m3u8Path == null) {
-      processResult.setStdErr("m3u8_path can not be empty");
-      return response.setJson(processResult);
-    } else {
-      m3u8Path = "." + m3u8Path;
-    }
-    String videos = request.getString("videos");
+    Long sessionId = request.getLong("session_id");
     String watermark = request.getString("watermark");
+    String storagePlatform = request.getString("storage_platform");
 
-    log.info("session_prt:{},m3u8Path:{},videos:{},watermark:{}", session_prt, m3u8Path, videos, watermark);
+    ProcessResult processResult = new ProcessResult();
+    log.info("sessionId:{},m3u8Path:{},watermark:{}", sessionId, watermark);
+    Aop.get(HlsSessionService.class).close(sessionId);
 
-    File file = new File(m3u8Path);
-    if (file.exists()) {
-      log.info("finishPersistentHls:{}", session_prt);
-      if (session_prt != null) {
-        NativeMedia.finishPersistentHls(session_prt, m3u8Path);
-      }
-    } else {
-      log.info("freeHlsSession:{}", session_prt);
-      if (session_prt != null) {
-        NativeMedia.freeHlsSession(session_prt);
-      }
+    if (sessionId != null) {
+      finish(sessionId, watermark, storagePlatform, processResult);
     }
-
-    if (videos != null) {
-      String subPath = FilenameUtils.getSubPath(m3u8Path);
-      String outputMp4Path = subPath + "/origin_main.mp4";
-      String[] split = videos.split(",");
-      String[] mp4FileList = new String[split.length];
-      String[] wavFileList = new String[split.length];
-      for (int i = 0; i < split.length; i++) {
-        mp4FileList[i] = "." + split[i].replace(".m3u8", ".mp4");
-        wavFileList[i] = "." + split[i].replace(".m3u8", ".wav");
-      }
-      log.info("merge:{}", JsonUtils.toJson(mp4FileList));
-      boolean merged = NativeMedia.merge(mp4FileList, outputMp4Path);
-      log.info("merged:{}", merged);
-      if (merged) {
-        String outputFile = outputMp4Path;
-        if (watermark != null) {
-          outputFile = subPath + "/main.mp4";
-          VideoWaterUtils.addWatermark(outputMp4Path, outputFile, 24, watermark);
-        }
-
-        double videoLength = NativeMedia.getVideoLength(outputFile);
-        log.info("video_length:{} {}", outputMp4Path, videoLength);
-        processResult.setVideo_length(videoLength);
-
-        // 实验的结果
-        double delta = videoLength - 120d;
-        String mp3Path = null;
-        if (delta > 0) {
-          double insertion_silence_duration = delta / 100;
-          mp3Path = NativeMedia.toMp3ForSilence(outputFile, insertion_silence_duration);
-        } else {
-          mp3Path = NativeMedia.toMp3(outputFile);
-        }
-        processResult.setAudio(mp3Path);
-        log.info("mp3:{}", mp3Path);
-      }
-    }
-
     return response.setJson(processResult);
   }
 
+  private void finish(Long sessionId, String watermark, String storagePlatform, ProcessResult processResult) {
+    String scenesDir = FolderUtils.scenes(sessionId);
+    String combinedDir = FolderUtils.combined(sessionId);
+
+    File combinedFile = new File(combinedDir);
+
+    if (!combinedFile.exists()) {
+      combinedFile.mkdirs();
+    }
+
+    String outputMp4Path = combinedDir + File.separator + "combined.mp4";
+    String outputWatermarkPath = combinedDir + File.separator + "combined_watermark.mp4";
+    String outputPptPath = combinedDir + File.separator + "combined.pptx";
+    String outputMp3Path = null;
+
+    File videoDir = new File(scenesDir);
+    // 1. 图片所在目录
+    File[] imageFiles = videoDir.listFiles(f -> f.isFile() && FilenameUtils.isImageFile(f.getName()));
+    // 生成pptx
+    PptUtils.addImage(imageFiles, outputPptPath);
+
+    File[] mp4Files = videoDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp4"));
+    if (mp4Files.length > 0) {
+      Arrays.sort(mp4Files, Comparator.comparing(File::getName));
+      String[] mp4FileList = new String[mp4Files.length];
+      for (int i = 0; i < mp4Files.length; i++) {
+        String absolutePath = mp4Files[i].getAbsolutePath();
+        mp4FileList[i] = absolutePath;
+      }
+
+      log.info("merge:{}", JsonUtils.toJson(mp4FileList));
+      boolean merged = NativeMedia.merge(mp4FileList, outputMp4Path);
+      log.info("merged:{}", merged);
+
+      if (merged) {
+        if (watermark != null) {
+          try {
+            VideoWaterUtils.addWatermark(outputMp4Path, outputWatermarkPath, 24, watermark);
+          } catch (IOException | InterruptedException e) {
+            log.error(e.getMessage(), e);
+          }
+        }
+        double videoLength = NativeMedia.getVideoLength(outputWatermarkPath);
+        log.info("video_length:{} {}", outputMp4Path, videoLength);
+        processResult.setVideo_length(videoLength);
+        // 实验的结果
+        double delta = videoLength - 120d;
+        if (delta > 0) {
+          double insertion_silence_duration = delta / 100;
+          outputMp3Path = NativeMedia.toMp3ForSilence(outputWatermarkPath, insertion_silence_duration);
+        } else {
+          outputMp3Path = NativeMedia.toMp3(outputWatermarkPath);
+        }
+        processResult.setAudio(outputMp3Path);
+        log.info("mp3:{}", outputMp3Path);
+      }
+    }
+
+    // upload
+    String combinedPath = "data/combined/" + sessionId;
+    List<UploadInput> uploadFiles = new ArrayList<>();
+    if (Files.exists(Paths.get(outputMp4Path))) {
+      String targetName = combinedPath + "/" + "combined.mp4";
+      processResult.setVideo(targetName);
+      uploadFiles.add(new UploadInput(outputMp4Path, targetName));
+    }
+
+    if (Files.exists(Paths.get(outputWatermarkPath))) {
+      String targetName = combinedPath + "/" + "combined_watermark.mp4";
+      processResult.setOutput(targetName);
+      uploadFiles.add(new UploadInput(outputWatermarkPath, targetName));
+    }
+
+    if (Files.exists(Paths.get(outputMp3Path))) {
+      String targetName = combinedPath + "/" + "combined_watermark.mp3";
+      processResult.setAudio(targetName);
+      uploadFiles.add(new UploadInput(outputMp3Path, targetName));
+    }
+
+    if (Files.exists(Paths.get(outputPptPath))) {
+      String targetName = combinedPath + "/" + "combined.pptx";
+      processResult.setPpt(targetName);
+      uploadFiles.add(new UploadInput(outputPptPath, targetName));
+    }
+
+    if (storagePlatform != null) {
+      try {
+        List<UploadResultVo> results = Aop.get(StorageUploadService.class).uploadFile(storagePlatform, uploadFiles);
+        processResult.setVideo(results.get(0).getUrl());
+        processResult.setOutput(results.get(1).getUrl());
+        processResult.setAudio(results.get(2).getUrl());
+        processResult.setPpt(results.get(3).getUrl());
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
+    }
+
+  }
 }
