@@ -71,6 +71,10 @@ public class MotionCanvasHandler implements HttpRequestHandler {
     } else {
       code = request.getBodyString();
     }
+    if(code==null) {
+      response.fail("code can not be empty");
+      return response;
+    }
 
     VideoCodeInput manimVideoCodeInput = new VideoCodeInput(sessionId, id, code_name, code, timeout);
     // 同一时间,只能写入一个sessionId
