@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/data/apps/java-kit-server
-Environment="PATH=/root/.nvm/versions/node/v25.2.1/bin:$PATH"
-ExecStart=//usr/java/jdk-17.0.12/bin/java -jar java-kit-server-1.0.0.jar --server.port=8000
+Environment="PATH=/root/miniconda3/bin:/root/.nvm/versions/node/v25.2.1/bin:$PATH"
+ExecStart=/usr/java/jdk-21.0.6/bin/java -jar java-kit-server-1.0.0.jar --server.port=8001
 Restart=on-failure
 RestartSec=5s
 

@@ -81,10 +81,10 @@ public class KitAppConfig implements BootConfiguration {
       r.add("/motion-canvas/finish", motionCanvasFinishHandler);
 
       HttpFileDataHandler dataHandler = new HttpFileDataHandler(false);
-      r.add("/data/**", dataHandler::index);
-      r.add("/cache/**", dataHandler::index);
-      r.add("/media/**", dataHandler::index);
-      r.add("/motion-canvas/**", dataHandler::index);
+      r.add("/data/**", dataHandler);
+      r.add("/cache/**", dataHandler);
+      r.add("/media/**", dataHandler);
+      r.add("/motion-canvas/**", dataHandler);
 
       DataDeleteHandler dataDeleteHandler = new DataDeleteHandler();
       r.add("/delete", dataDeleteHandler);

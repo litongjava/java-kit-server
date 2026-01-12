@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
+Environment="PATH=/root/.nvm/versions/node/v25.2.1/bin:$PATH"
 WorkingDirectory=/data/apps/java-kit-server
 ExecStart=./start_server.sh
 Restart=on-failure

@@ -32,7 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ManimVideoCodeExecuteService {
   public static final String pdgp_filename = "pgdp-output.json";
 
-  public ProcessResult executeCode(VideoCodeInput input, ChannelContext channelContext) throws IOException, InterruptedException {
+  public ProcessResult executeCode(VideoCodeInput input, ChannelContext channelContext)
+      throws IOException, InterruptedException {
     Long sessionId = input.getSessionId();
     Long taskId = input.getTaskId();
     String code = input.getCode();
@@ -73,7 +74,8 @@ public class ManimVideoCodeExecuteService {
     }
 
     // 读取字幕
-    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId + ".vtt";
+    String subtitlePath = WorkDirUtils.workingMediaDir + File.separator + "tts_subtitle" + File.separator + taskId
+        + ".vtt";
     File subtitleFile = new File(subtitlePath);
     if (subtitleFile.exists()) {
       String text = FileUtil.readString(subtitleFile);
@@ -122,11 +124,12 @@ public class ManimVideoCodeExecuteService {
           result.setVideo(tagetVideoFilePath);
           result.setOutput(FolderUtils.httpScenes(sessionId, videoFilename));
 
+          log.info("move to {}", videoFilePath);
           // 获取音频时长
           double videoLength = NativeMedia.getVideoLength(videoFilePath);
           result.setVideo_length(videoLength);
 
-          log.info("found file:{},{}", videoFilePath, videoLength);
+          log.info("video length {} {}", videoFilePath, videoLength);
 
           // 获取最后一帧的图片
           String outputJpgPath = dataMp4VideoDir + "/" + videoFile.getName() + ".jpg";
@@ -143,7 +146,8 @@ public class ManimVideoCodeExecuteService {
             uploadFile.add(new UploadInput(outputJpgPath, mp4Folder + "/" + baseName + ".jpg"));
 
             try {
-              List<UploadResultVo> uploadFileList = Aop.get(StorageUploadService.class).uploadFile(storagePlatform, uploadFile);
+              List<UploadResultVo> uploadFileList = Aop.get(StorageUploadService.class).uploadFile(storagePlatform,
+                  uploadFile);
               if (uploadFileList.size() > 1) {
                 result.setVideo(uploadFileList.get(0).getUrl());
                 result.setImage(uploadFileList.get(1).getUrl());
@@ -162,7 +166,8 @@ public class ManimVideoCodeExecuteService {
             log.info("skip merge to hls:{}", videoFilePath);
             String dataM3u8Path = dataHlsVideoDir + File.separator + baseName + ".m3u8";
             log.info("to hls:{}", dataM3u8Path);
-            NativeMedia.splitVideoToHLS(dataM3u8Path, tagetVideoFilePath, dataHlsVideoDir + File.separator + "part_%03d.ts", 10);
+            NativeMedia.splitVideoToHLS(dataM3u8Path, tagetVideoFilePath,
+                dataHlsVideoDir + File.separator + "part_%03d.ts", 10);
 
             String hlsUrl = FolderUtils.httpM3u8(sessionId, baseName + ".m3u8");
             result.setHlsUrl(hlsUrl);
@@ -179,7 +184,8 @@ public class ManimVideoCodeExecuteService {
     return result;
   }
 
-  private ManimVideoResult buildVideoFilePath(ProcessResult result, String dataHlsVideoDir, String videoFolder, File[] mp4Files) {
+  private ManimVideoResult buildVideoFilePath(ProcessResult result, String dataHlsVideoDir, String videoFolder,
+      File[] mp4Files) {
     String videoFilePath = null;
     String audoFilePath = null;
     if (mp4Files.length > 1) {

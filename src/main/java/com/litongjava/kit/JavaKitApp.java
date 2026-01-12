@@ -1,6 +1,8 @@
 package com.litongjava.kit;
 
 import java.lang.Thread.Builder.OfVirtual;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import com.litongjava.kit.config.KitAppConfig;
@@ -16,6 +18,14 @@ public class JavaKitApp {
 
     TioBootServer server = TioBootServer.me();
     server.setWorkThreadFactory(factory);
+    server.setWorkThreadNum(Runtime.getRuntime().availableProcessors() * 8);
+
+    // 3. 创建业务虚拟线程 Executor（每任务一个虚拟线程）
+    ThreadFactory bizTf = Thread.ofVirtual().name("t-biz-v-", 0).factory();
+
+    ExecutorService bizExecutor = Executors.newThreadPerTaskExecutor(bizTf);
+
+    server.setBizExecutor(bizExecutor);
 
     TioApplication.run(JavaKitApp.class, new KitAppConfig(), args);
     long end = System.currentTimeMillis();
